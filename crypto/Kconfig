@@ -64,7 +64,7 @@ config CRYPTO_FIPS140_MOD_EVAL_TESTING
 	  services.  This option should not be enabled in production builds.
 
 config CRYPTO_ALGAPI
-	tristate
+	tristate "ALGAPI"
 	select CRYPTO_ALGAPI2
 	help
 	  This option provides the API for cryptographic algorithms.
@@ -73,7 +73,7 @@ config CRYPTO_ALGAPI2
 	tristate
 
 config CRYPTO_AEAD
-	tristate
+	tristate "AEAD"
 	select CRYPTO_AEAD2
 	select CRYPTO_ALGAPI
 
@@ -84,7 +84,7 @@ config CRYPTO_AEAD2
 	select CRYPTO_RNG2
 
 config CRYPTO_SKCIPHER
-	tristate
+	tristate "SKCIPHER"
 	select CRYPTO_SKCIPHER2
 	select CRYPTO_ALGAPI
 
@@ -94,7 +94,7 @@ config CRYPTO_SKCIPHER2
 	select CRYPTO_RNG2
 
 config CRYPTO_HASH
-	tristate
+	tristate "HASH"
 	select CRYPTO_HASH2
 	select CRYPTO_ALGAPI
 
@@ -103,7 +103,7 @@ config CRYPTO_HASH2
 	select CRYPTO_ALGAPI2
 
 config CRYPTO_RNG
-	tristate
+	tristate "RNG"
 	select CRYPTO_RNG2
 	select CRYPTO_ALGAPI
 
