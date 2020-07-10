@@ -18,6 +18,13 @@
 		mmc0 = &sdmmc;
 	};
 
+	aliases {
+		led-boot = &sys_led;
+		led-failsafe = &sys_led;
+		led-running = &sys_led;
+		led-upgrade = &sys_led;
+	};
+
 	chosen {
 		stdout-path = "serial2:1500000n8";
 	};
