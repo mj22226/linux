@@ -404,6 +404,7 @@
 	rtl8153: device@2 {
 		compatible = "usbbda,8153";
 		reg = <2>;
+		realtek,led-data = <0x87>;
 	};
 };
 
