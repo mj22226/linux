@@ -37,6 +37,7 @@
 #include <linux/in6.h>
 #include <linux/if_packet.h>
 #include <net/flow.h>
+#include <net/page_pool.h>
 #if IS_ENABLED(CONFIG_NF_CONNTRACK)
 #include <linux/netfilter/nf_conntrack_common.h>
 #endif
@@ -789,7 +790,8 @@ struct sk_buff {
 				fclone:2,
 				peeked:1,
 				head_frag:1,
-				pfmemalloc:1;
+				pfmemalloc:1,
+				pp_recycle:1; /* page_pool recycle indicator */
 #ifdef CONFIG_SKB_EXTENSIONS
 	__u8			active_extensions;
 #endif
@@ -3070,9 +3072,15 @@ static inline void skb_frag_ref(struct sk_buff *skb, int f)
  *
  * Releases a reference on the paged fragment @frag.
  */
-static inline void __skb_frag_unref(skb_frag_t *frag)
+static inline void __skb_frag_unref(skb_frag_t *frag, bool recycle)
 {
-	put_page(skb_frag_page(frag));
+	struct page *page = skb_frag_page(frag);
+
+#ifdef CONFIG_PAGE_POOL
+	if (recycle && page_pool_return_skb_page(page))
+		return;
+#endif
+	put_page(page);
 }
 
 /**
@@ -3084,7 +3092,7 @@ static inline void __skb_frag_unref(skb_frag_t *frag)
  */
 static inline void skb_frag_unref(struct sk_buff *skb, int f)
 {
-	__skb_frag_unref(&skb_shinfo(skb)->frags[f]);
+	__skb_frag_unref(&skb_shinfo(skb)->frags[f], skb->pp_recycle);
 }
 
 /**
@@ -4693,6 +4701,13 @@ static inline void skb_set_kcov_handle(struct sk_buff *skb,
 				       const u64 kcov_handle) { }
 static inline u64 skb_get_kcov_handle(struct sk_buff *skb) { return 0; }
 #endif /* CONFIG_KCOV && CONFIG_SKB_EXTENSIONS */
+
+#ifdef CONFIG_PAGE_POOL
+static inline void skb_mark_for_recycle(struct sk_buff *skb)
+{
+	skb->pp_recycle = 1;
+}
+#endif
 
 #endif	/* __KERNEL__ */
 #endif	/* _LINUX_SKBUFF_H */

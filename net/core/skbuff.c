@@ -595,13 +595,22 @@ static void skb_clone_fraglist(struct sk_buff *skb)
 		skb_get(list);
 }
 
+static bool skb_pp_recycle(struct sk_buff *skb, void *data)
+{
+	if (!IS_ENABLED(CONFIG_PAGE_POOL) || !skb->pp_recycle)
+		return false;
+	return page_pool_return_skb_page(virt_to_page(data));
+}
+
 static void skb_free_head(struct sk_buff *skb)
 {
 	unsigned char *head = skb->head;
 
-	if (skb->head_frag)
+	if (skb->head_frag) {
+		if (skb_pp_recycle(skb, head))
+			return;
 		skb_free_frag(head);
-	else
+	} else
 		kfree(head);
 }
 
@@ -613,16 +622,27 @@ static void skb_release_data(struct sk_buff *skb)
 	if (skb->cloned &&
 	    atomic_sub_return(skb->nohdr ? (1 << SKB_DATAREF_SHIFT) + 1 : 1,
 			      &shinfo->dataref))
-		return;
+		goto exit;
 
 	for (i = 0; i < shinfo->nr_frags; i++)
-		__skb_frag_unref(&shinfo->frags[i]);
+		__skb_frag_unref(&shinfo->frags[i], skb->pp_recycle);
 
 	if (shinfo->frag_list)
 		kfree_skb_list(shinfo->frag_list);
 
 	skb_zcopy_clear(skb, true);
 	skb_free_head(skb);
+exit:
+	/* When we clone an SKB we copy the reycling bit. The pp_recycle
+	 * bit is only set on the head though, so in order to avoid races
+	 * while trying to recycle fragments on __skb_frag_unref() we need
+	 * to make one SKB responsible for triggering the recycle path.
+	 * So disable the recycling bit if an SKB is cloned and we have
+	 * additional references to to the fragmented part of the SKB.
+	 * Eventually the last SKB will have the recycling bit set and it's
+	 * dataref set to 0, which will trigger the recycling
+	 */
+	skb->pp_recycle = 0;
 }
 
 /*
@@ -1005,6 +1025,7 @@ static struct sk_buff *__skb_clone(struct sk_buff *n, struct sk_buff *skb)
 	n->nohdr = 0;
 	n->peeked = 0;
 	C(pfmemalloc);
+	C(pp_recycle);
 	n->destructor = NULL;
 	C(tail);
 	C(end);
@@ -3439,7 +3460,7 @@ int skb_shift(struct sk_buff *tgt, struct sk_buff *skb, int shiftlen)
 		fragto = &skb_shinfo(tgt)->frags[merge];
 
 		skb_frag_size_add(fragto, skb_frag_size(fragfrom));
-		__skb_frag_unref(fragfrom);
+		__skb_frag_unref(fragfrom, skb->pp_recycle);
 	}
 
 	/* Reposition in the original skb */
@@ -5213,6 +5234,20 @@ bool skb_try_coalesce(struct sk_buff *to, struct sk_buff *from,
 	*fragstolen = false;
 
 	if (skb_cloned(to))
+		return false;
+
+	/* In general, avoid mixing slab allocated and page_pool allocated
+	 * pages within the same SKB. However when @to is not pp_recycle and
+	 * @from is cloned, we can transition frag pages from page_pool to
+	 * reference counted.
+	 *
+	 * On the other hand, don't allow coalescing two pp_recycle SKBs if
+	 * @from is cloned, in case the SKB is using page_pool fragment
+	 * references (PP_FLAG_PAGE_FRAG). Since we only take full page
+	 * references for cloned SKBs at the moment that would result in
+	 * inconsistent reference counts.
+	 */
+	if (to->pp_recycle != (from->pp_recycle && !skb_cloned(from)))
 		return false;
 
 	if (len <= skb_tailroom(to)) {
