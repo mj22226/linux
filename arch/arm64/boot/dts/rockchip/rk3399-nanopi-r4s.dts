@@ -121,6 +121,11 @@
 	status = "disabled";
 };
 
+&sdmmc {
+	/delete-property/ sd-uhs-sdr104;
+	cap-sd-highspeed;
+};
+
 &u2phy0_host {
 	phy-supply = <&vdd_5v>;
 };
