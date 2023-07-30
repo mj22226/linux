@@ -14,6 +14,8 @@
 #define _MOTORCOMM_PHY_H
 
 #define MOTORCOMM_PHY_ID_MASK	0x00000fff
+#define MOTORCOMM_PHY_ID_8531_MASK	0xffffffff
+#define MOTORCOMM_MPHY_ID_MASK	0x0000ffff
 
 #define PHY_ID_YT8010		0x00000309
 #define PHY_ID_YT8510		0x00000109
@@ -21,10 +23,12 @@
 #define PHY_ID_YT8512		0x00000118
 #define PHY_ID_YT8512B		0x00000128
 #define PHY_ID_YT8521		0x0000011a
+#define PHY_ID_YT8531S		0x4f51e91a
+#define PHY_ID_YT8531		0x4f51e91b
+//#define PHY_ID_YT8614		0x0000e899
+#define PHY_ID_YT8618		0x0000e889
 
 #define REG_PHY_SPEC_STATUS		0x11
-#define REG_INT_MASK			0x12
-#define REG_INT_STATUS			0x13
 #define REG_DEBUG_ADDR_OFFSET		0x1e
 #define REG_DEBUG_DATA			0x1f
 
@@ -64,5 +68,52 @@
 #define YT8521_DUPLEX_BIT		13
 #define YT8521_LINK_STATUS_BIT		10
 
+/* based on yt8521 wol config register */
+#define YTPHY_UTP_INTR_REG             0x12
+/* WOL Event Interrupt Enable */
+#define YTPHY_WOL_INTR            BIT(6)
+
+/* Magic Packet MAC address registers */
+#define YTPHY_MAGIC_PACKET_MAC_ADDR2                 0xa007
+#define YTPHY_MAGIC_PACKET_MAC_ADDR1                 0xa008
+#define YTPHY_MAGIC_PACKET_MAC_ADDR0                 0xa009
+
+#define YTPHY_WOL_CFG_REG		0xa00a
+#define YTPHY_WOL_CFG_TYPE		BIT(0)	/* WOL TYPE */
+#define YTPHY_WOL_CFG_EN		BIT(3)	/* WOL Enable */
+#define YTPHY_WOL_CFG_INTR_SEL	BIT(6)	/* WOL Event Interrupt Enable */
+#define YTPHY_WOL_CFG_WIDTH1	BIT(1)	/* WOL Pulse Width */
+#define YTPHY_WOL_CFG_WIDTH2	BIT(2)
+
+#define YTPHY_REG_SPACE_UTP             0
+#define YTPHY_REG_SPACE_FIBER           2
+
+enum ytphy_wol_type_e
+{
+    YTPHY_WOL_TYPE_LEVEL,
+    YTPHY_WOL_TYPE_PULSE,
+    YTPHY_WOL_TYPE_MAX
+};
+typedef enum ytphy_wol_type_e ytphy_wol_type_t;
+
+enum ytphy_wol_width_e
+{
+    YTPHY_WOL_WIDTH_84MS,
+    YTPHY_WOL_WIDTH_168MS,
+    YTPHY_WOL_WIDTH_336MS,
+    YTPHY_WOL_WIDTH_672MS,
+    YTPHY_WOL_WIDTH_MAX
+};
+typedef enum ytphy_wol_width_e ytphy_wol_width_t;
+
+struct ytphy_wol_cfg_s
+{
+    int enable;
+    int type;
+    int width;
+};
+typedef struct ytphy_wol_cfg_s ytphy_wol_cfg_t;
+
 #endif /* _MOTORCOMM_PHY_H */
+
 
