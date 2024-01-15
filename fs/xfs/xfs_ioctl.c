@@ -492,7 +492,7 @@ xfs_attrmulti_attr_get(
 		error = -EFAULT;
 
 out_kfree:
-	kmem_free(args.value);
+	kvfree(args.value);
 	return error;
 }
 
