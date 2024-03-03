@@ -5,6 +5,7 @@ jobs:
   del_runs:
     runs-on: ubuntu-latest
     steps:
-      - uses: fabriziocacicia/delete-tags-without-release-action@v0.1.0
+      - name: Delete workflow runs
+        uses: fabriziocacicia/delete-tags-without-release-action@v0.1.0
         env:
            GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
