@@ -261,6 +261,9 @@ static void rtw_watch_dog_work(struct work_struct *work)
 	rtw_coex_wl_status_check(rtwdev);
 	rtw_coex_query_bt_hid_list(rtwdev);
 
+	if (rtwdev->chip->id == RTW_CHIP_TYPE_8821A && rtwdev->efuse.btcoex)
+		rtw_coex_query_bt_info(rtwdev);
+
 	rtw_phy_dynamic_mechanism(rtwdev);
 
 	rtw_hci_dynamic_rx_agg(rtwdev,
