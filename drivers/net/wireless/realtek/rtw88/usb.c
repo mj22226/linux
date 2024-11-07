@@ -931,6 +931,32 @@ static void rtw_usb_intf_deinit(struct rtw_dev *rtwdev,
 	usb_set_intfdata(intf, NULL);
 }
 
+static int rtw_usb_switch_mode_old(struct rtw_dev *rtwdev)
+{
+	struct rtw_usb *rtwusb = rtw_get_usb_priv(rtwdev);
+	enum usb_device_speed cur_speed = rtwusb->udev->speed;
+	u8 hci_opt;
+
+	if (cur_speed == USB_SPEED_HIGH) {
+		hci_opt = rtw_read8(rtwdev, REG_HCI_OPT_CTRL);
+
+		if ((hci_opt & (BIT(2) | BIT(3))) != BIT(3)) {
+			rtw_write8(rtwdev, REG_HCI_OPT_CTRL, 0x8);
+			rtw_write8(rtwdev, REG_SYS_SDIO_CTRL, 0x2);
+			rtw_write8(rtwdev, REG_ACLK_MON, 0x1);
+			rtw_write8(rtwdev, 0x3d, 0x3);
+			/* usb disconnect */
+			rtw_write8(rtwdev, REG_SYS_PW_CTRL + 1, 0x80);
+			return 1;
+		}
+	} else if (cur_speed == USB_SPEED_SUPER) {
+		rtw_write8_clr(rtwdev, REG_SYS_SDIO_CTRL, BIT(1));
+		rtw_write8_clr(rtwdev, REG_ACLK_MON, BIT(0));
+	}
+
+	return 0;
+}
+
 static int rtw_usb_switch_mode_new(struct rtw_dev *rtwdev)
 {
 	enum usb_device_speed cur_speed;
@@ -984,7 +1010,8 @@ static int rtw_usb_switch_mode(struct rtw_dev *rtwdev)
 {
 	u8 id = rtwdev->chip->id;
 
-	if (id != RTW_CHIP_TYPE_8822C && id != RTW_CHIP_TYPE_8822B)
+	if (id != RTW_CHIP_TYPE_8822C && id != RTW_CHIP_TYPE_8822B &&
+	    id != RTW_CHIP_TYPE_8812A)
 		return 0;
 
 	if (!rtwdev->efuse.usb_mode_switch) {
@@ -999,7 +1026,10 @@ static int rtw_usb_switch_mode(struct rtw_dev *rtwdev)
 		return 0;
 	}
 
-	return rtw_usb_switch_mode_new(rtwdev);
+	if (id == RTW_CHIP_TYPE_8812A)
+		return rtw_usb_switch_mode_old(rtwdev);
+	else /* RTL8822CU, RTL8822BU */
+		return rtw_usb_switch_mode_new(rtwdev);
 }
 
 int rtw_usb_probe(struct usb_interface *intf, const struct usb_device_id *id)
