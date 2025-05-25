@@ -1,0 +1,41 @@
+name: Build Kernel v6.16 tarball
+
+on:
+  workflow_dispatch:
+  push:
+jobs:
+  create_tar:
+    name: Generate custom kernel tarball
+    runs-on: ubuntu-24.04-arm
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: refs/heads/linux-6.16
+      - name: Pack kernel
+        run: |
+             wget https://github.com/mj22226/linux/archive/linux-6.16.tar.gz
+             tar -xf linux-6.16.tar.gz
+             mv linux-linux-6.16 linux-6.16
+             tar -c linux-6.16 | xz -T0 > linux-6.16.tar.xz
+             sha256sum linux-6.16.tar.xz > linux-6.16.sha256sum
+             echo "DATE=$(date +'%Y.%m.%d')" >> $GITHUB_ENV
+             echo "HASH=$(git log -1 --format="%H")" >> $GITHUB_ENV
+      - name: Delete tag
+        run: gh release delete v6.16 --cleanup-tag || true
+        env:
+            GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Release build artifacts
+        uses: ncipollo/release-action@v1.14.0
+        with:
+          commit: ${{ env.HASH }}
+          name: Linux 6.16 ${{ env.DATE }}
+          allowUpdates: true
+          prerelease: false
+          replacesArtifacts: true
+          tag: v6.16
+          token: ${{ secrets.GITHUB_TOKEN }}
+          artifacts: |
+                    *.xz
+                    *.sha256sum
