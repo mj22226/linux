@@ -6,7 +6,6 @@ jobs:
   create_tar:
     name: Generate custom kernel tarball
     runs-on: ubuntu-24.04-arm
-
     steps:
       - name: Checkout
         uses: actions/checkout@v4
