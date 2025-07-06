@@ -2,6 +2,7 @@ name: Build Kernel v6.16 tarball
 on:
   workflow_dispatch:
   push:
+  
 jobs:
   create_tar:
     name: Generate custom kernel tarball
