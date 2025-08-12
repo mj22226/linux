@@ -17,10 +17,10 @@ jobs:
         run: |
              wget https://github.com/mj22226/linux/archive/linux-6.12.tar.gz
              tar -xf linux-6.12.tar.gz
-             mv linux-linux-6.12 linux-6.12.41
+             mv linux-linux-6.12 linux-6.12.42
              rm -rf linux-linux-6.12
-             tar -c linux-6.12.41 | xz -T0 > linux-6.12.41.tar.xz
-             sha256sum linux-6.12.41.tar.xz > linux-6.12.41.sha256sum
+             tar -c linux-6.12.42 | xz -T0 > linux-6.12.42.tar.xz
+             sha256sum linux-6.12.42.tar.xz > linux-6.12.42.sha256sum
              echo "DATE=$(date +'%Y.%m.%d')" >> $GITHUB_ENV
              echo "HASH=$(git log -1 --format="%H")" >> $GITHUB_ENV
       - name: Delete tag
@@ -31,7 +31,7 @@ jobs:
         uses: ncipollo/release-action@v1.14.0
         with:
           commit: ${{ env.HASH }}
-          name: Linux 6.12.41-rc1 ${{ env.DATE }}
+          name: Linux 6.12.42-rc1 ${{ env.DATE }}
           allowUpdates: true
           prerelease: false
           replacesArtifacts: true

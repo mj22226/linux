@@ -16,9 +16,9 @@ jobs:
         run: |
              wget https://github.com/mj22226/linux/archive/linux-6.16.tar.gz
              tar -xf linux-6.16.tar.gz
-             mv linux-linux-6.16 linux-6.16
-             tar -c linux-6.16 | xz -T0 > linux-6.16.tar.xz
-             sha256sum linux-6.16.tar.xz > linux-6.16.sha256sum
+             mv linux-linux-6.16 linux-6.16.1
+             tar -c linux-6.16.1 | xz -T0 > linux-6.16.1.tar.xz
+             sha256sum linux-6.16.1.tar.xz > linux-6.16.1.sha256sum
              echo "DATE=$(date +'%Y.%m.%d')" >> $GITHUB_ENV
              echo "HASH=$(git log -1 --format="%H")" >> $GITHUB_ENV
       - name: Delete tag
@@ -29,7 +29,7 @@ jobs:
         uses: ncipollo/release-action@v1.14.0
         with:
           commit: ${{ env.HASH }}
-          name: Linux 6.16-rc4 ${{ env.DATE }}
+          name: Linux 6.16.1-rc1 ${{ env.DATE }}
           allowUpdates: true
           prerelease: false
           replacesArtifacts: true

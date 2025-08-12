@@ -29,7 +29,7 @@ jobs:
         uses: ncipollo/release-action@v1.14.0
         with:
           commit: ${{ env.HASH }}
-          name: Linux 6.17-rc4 ${{ env.DATE }}
+          name: Linux 6.17-rc1 ${{ env.DATE }}
           allowUpdates: true
           prerelease: false
           replacesArtifacts: true
