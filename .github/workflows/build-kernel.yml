@@ -1,0 +1,164 @@
+name: Build Kernel tarball
+
+on:
+  workflow_dispatch:
+jobs:
+  kernel0:
+    name: kernel 6.6
+    runs-on: ubuntu-24.04-arm
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: refs/heads/linux-6.6
+      - name: kernel version
+        run: |
+             echo "VERSION=$(awk '/^VERSION =/{a=$3};/^PATCHLEVEL =/{b=$3};/^SUBLEVEL =/{c=$3};END{print a"."b"."c}' Makefile)" >> $GITHUB_ENV
+             echo "HASH=$(git log -1 --format="%H")" >> $GITHUB_ENV
+             echo "T=$(make kernelversion)" >> $GITHUB_ENV
+             echo "DATE=$(date +'%Y.%m.%d')" >> $GITHUB_ENV
+      - name: Pack kernel
+        run: |
+             wget https://github.com/mj22226/linux/archive/linux-6.6.tar.gz
+             tar -xf linux-6.6.tar.gz
+             mv linux-linux-6.6 linux-${{ env.VERSION }}
+             tar -c linux-${{ env.VERSION }} | xz -T0 > linux-${{ env.VERSION }}.tar.xz
+             sha256sum linux-${{ env.VERSION }}.tar.xz > linux-${{ env.VERSION }}.sha256sum
+      - name: Delete tag
+        run: gh release delete v6.6 --cleanup-tag || true
+        env:
+            GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Release build artifacts
+        uses: ncipollo/release-action@v1.18.0
+        with:
+          commit: ${{ env.HASH }}
+          name: Linux ${{ env.T }} ${{ env.DATE }}
+          allowUpdates: true
+          prerelease: false
+          replacesArtifacts: true
+          tag: v6.6
+          token: ${{ secrets.GITHUB_TOKEN }}
+          artifacts: |
+                    *.xz
+                    *.sha256sum
+
+  kernel1:
+    name: kernel 6.12
+    runs-on: ubuntu-24.04-arm
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: refs/heads/linux-6.12
+      - name: kernel version
+        run: |
+             echo "VERSION=$(awk '/^VERSION =/{a=$3};/^PATCHLEVEL =/{b=$3};/^SUBLEVEL =/{c=$3};END{print a"."b"."c}' Makefile)" >> $GITHUB_ENV
+             echo "HASH=$(git log -1 --format="%H")" >> $GITHUB_ENV
+             echo "T=$(make kernelversion)" >> $GITHUB_ENV
+             echo "DATE=$(date +'%Y.%m.%d')" >> $GITHUB_ENV
+      - name: Pack kernel
+        run: |
+             wget https://github.com/mj22226/linux/archive/linux-6.12.tar.gz
+             tar -xf linux-6.12.tar.gz
+             mv linux-linux-6.12 linux-${{ env.VERSION }}
+             tar -c linux-${{ env.VERSION }} | xz -T0 > linux-${{ env.VERSION }}.tar.xz
+             sha256sum linux-${{ env.VERSION }}.tar.xz > linux-${{ env.VERSION }}.sha256sum
+      - name: Delete tag
+        run: gh release delete v6.12 --cleanup-tag || true
+        env:
+            GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Release build artifacts
+        uses: ncipollo/release-action@v1.18.0
+        with:
+          commit: ${{ env.HASH }}
+          name: Linux ${{ env.T }} ${{ env.DATE }}
+          allowUpdates: true
+          prerelease: false
+          replacesArtifacts: true
+          tag: v6.12
+          token: ${{ secrets.GITHUB_TOKEN }}
+          artifacts: |
+                    *.xz
+                    *.sha256sum
+                    
+  kernel2:
+    name: kernel 6.16
+    runs-on: ubuntu-24.04-arm
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: refs/heads/linux-6.16
+      - name: kernel version
+        run: |
+             echo "VERSION=$(awk '/^VERSION =/{a=$3};/^PATCHLEVEL =/{b=$3};/^SUBLEVEL =/{c=$3};END{print a"."b"."c}' Makefile)" >> $GITHUB_ENV
+             echo "T=$(make kernelversion)" >> $GITHUB_ENV
+             echo "DATE=$(date +'%Y.%m.%d')" >> $GITHUB_ENV
+             echo "HASH=$(git log -1 --format="%H")" >> $GITHUB_ENV
+      - name: Pack kernel
+        run: |
+             wget https://github.com/mj22226/linux/archive/linux-6.16.tar.gz
+             tar -xf linux-6.16.tar.gz
+             mv linux-linux-6.16 linux-${{ env.VERSION }}
+             tar -c linux-${{ env.VERSION }} | xz -T0 > linux-${{ env.VERSION }}.tar.xz
+             sha256sum linux-${{ env.VERSION }}.tar.xz > linux-${{ env.VERSION }}.sha256sum
+      - name: Delete tag
+        run: gh release delete v6.16 --cleanup-tag || true
+        env:
+            GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Release build artifacts
+        uses: ncipollo/release-action@v1.18.0
+        with:
+          commit: ${{ env.HASH }}
+          name: Linux ${{ env.T }} ${{ env.DATE }}
+          allowUpdates: true
+          prerelease: false
+          replacesArtifacts: true
+          tag: v6.16
+          token: ${{ secrets.GITHUB_TOKEN }}
+          artifacts: |
+                    *.xz
+                    *.sha256sum
+
+  kernel3:
+    name: kernel 6.17
+    runs-on: ubuntu-24.04-arm
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: refs/heads/linux-6.17
+      - name: kernel version
+        run: |
+             echo "VERSION=$(awk '/^VERSION =/{a=$3};/^PATCHLEVEL =/{b=$3};/^SUBLEVEL =/{c=$3};END{print a"."b"."c}' Makefile)" >> $GITHUB_ENV
+             echo "T=$(make kernelversion)" >> $GITHUB_ENV
+             echo "DATE=$(date +'%Y.%m.%d')" >> $GITHUB_ENV
+             echo "HASH=$(git log -1 --format="%H")" >> $GITHUB_ENV
+      - name: Pack kernel
+        run: |
+             wget https://github.com/mj22226/linux/archive/linux-6.17.tar.gz
+             tar -xf linux-6.17.tar.gz
+             mv linux-linux-6.17 linux-${{ env.VERSION }}
+             tar -c linux-${{ env.VERSION }} | xz -T0 > linux-${{ env.VERSION }}.tar.xz
+             sha256sum linux-${{ env.VERSION }}.tar.xz > linux-${{ env.VERSION }}.sha256sum
+      - name: Delete tag
+        run: gh release delete v6.17 --cleanup-tag || true
+        env:
+            GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Release build artifacts
+        uses: ncipollo/release-action@v1.18.0
+        with:
+          commit: ${{ env.HASH }}
+          name: Linux ${{ env.T }} ${{ env.DATE }}
+          allowUpdates: true
+          prerelease: false
+          replacesArtifacts: true
+          tag: v6.17
+          token: ${{ secrets.GITHUB_TOKEN }}
+          artifacts: |
+                    *.xz
+                    *.sha256sum
