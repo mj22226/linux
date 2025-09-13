@@ -1,0 +1,209 @@
+name: Build Kernel tarball
+
+on:
+  workflow_dispatch:
+jobs:
+  kernel0:
+    name: kernel 6.6
+    runs-on: ubuntu-24.04-arm
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@main
+        with:
+          ref: refs/heads/linux-6.6
+      - name: kernel version
+        run: |
+             echo "VERSION=$(awk '/^VERSION =/{a=$3};/^PATCHLEVEL =/{b=$3};/^SUBLEVEL =/{c=$3};END{print a"."b"."c}' Makefile)" >> $GITHUB_ENV
+             echo "LEVEL=$(awk '/^VERSION =/{a=$3};/^PATCHLEVEL =/{b=$3};END{print a"."b}' Makefile)" >> $GITHUB_ENV
+             echo "HASH=$(git log -1 --format="%H")" >> $GITHUB_ENV
+             echo "T=$(make kernelversion)" >> $GITHUB_ENV
+             echo "DATE=$(date +'%Y.%m.%d')" >> $GITHUB_ENV
+      - name: Pack kernel
+        run: |
+             wget https://github.com/mj22226/linux/archive/linux-${{ env.LEVEL }}.tar.gz
+             tar -xf linux-${{ env.LEVEL }}.tar.gz
+             mv linux-linux-${{ env.LEVEL }} linux-${{ env.VERSION }}
+             tar -c linux-${{ env.VERSION }} | xz -T0 > linux-${{ env.VERSION }}.tar.xz
+             sha256sum linux-${{ env.VERSION }}.tar.xz > sha256sum
+      - name: Delete tag
+        run: gh release delete v${{ env.LEVEL }} --cleanup-tag || true
+        env:
+            GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Release build artifacts
+        uses: ncipollo/release-action@main
+        with:
+          commit: ${{ env.HASH }}
+          name: Linux ${{ env.T }} ${{ env.DATE }}
+          allowUpdates: true
+          prerelease: false
+          replacesArtifacts: true
+          tag: v${{ env.LEVEL }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+          artifacts: |
+                    *.xz
+                    sha256sum
+
+  kernel1:
+    name: kernel 6.12
+    runs-on: ubuntu-24.04-arm
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@main
+        with:
+          ref: refs/heads/linux-6.12
+      - name: kernel version
+        run: |
+             echo "VERSION=$(awk '/^VERSION =/{a=$3};/^PATCHLEVEL =/{b=$3};/^SUBLEVEL =/{c=$3};END{print a"."b"."c}' Makefile)" >> $GITHUB_ENV
+             echo "LEVEL=$(awk '/^VERSION =/{a=$3};/^PATCHLEVEL =/{b=$3};END{print a"."b}' Makefile)" >> $GITHUB_ENV
+             echo "HASH=$(git log -1 --format="%H")" >> $GITHUB_ENV
+             echo "T=$(make kernelversion)" >> $GITHUB_ENV
+             echo "DATE=$(date +'%Y.%m.%d')" >> $GITHUB_ENV
+      - name: Pack kernel
+        run: |
+             wget https://github.com/mj22226/linux/archive/linux-${{ env.LEVEL }}.tar.gz
+             tar -xf linux-${{ env.LEVEL }}.tar.gz
+             mv linux-linux-${{ env.LEVEL }} linux-${{ env.VERSION }}
+             tar -c linux-${{ env.VERSION }} | xz -T0 > linux-${{ env.VERSION }}.tar.xz
+             sha256sum linux-${{ env.VERSION }}.tar.xz > sha256sum
+      - name: Delete tag
+        run: gh release delete v${{ env.LEVEL }} --cleanup-tag || true
+        env:
+            GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Release build artifacts
+        uses: ncipollo/release-action@main
+        with:
+          commit: ${{ env.HASH }}
+          name: Linux ${{ env.T }} ${{ env.DATE }}
+          allowUpdates: true
+          prerelease: false
+          replacesArtifacts: true
+          tag: v${{ env.LEVEL }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+          artifacts: |
+                    *.xz
+                    sha256sum
+                    
+  kernel2:
+    name: kernel 6.18
+    runs-on: ubuntu-24.04-arm
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@main
+        with:
+          ref: refs/heads/linux-6.18
+      - name: kernel version
+        run: |
+             echo "VERSION=$(awk '/^VERSION =/{a=$3};/^PATCHLEVEL =/{b=$3};/^SUBLEVEL =/{c=$3};END{print a"."b"."c}' Makefile)" >> $GITHUB_ENV
+             echo "LEVEL=$(awk '/^VERSION =/{a=$3};/^PATCHLEVEL =/{b=$3};END{print a"."b}' Makefile)" >> $GITHUB_ENV
+             echo "T=$(make kernelversion)" >> $GITHUB_ENV
+             echo "DATE=$(date +'%Y.%m.%d')" >> $GITHUB_ENV
+             echo "HASH=$(git log -1 --format="%H")" >> $GITHUB_ENV
+      - name: Pack kernel
+        run: |
+             wget https://github.com/mj22226/linux/archive/linux-${{ env.LEVEL }}.tar.gz
+             tar -xf linux-${{ env.LEVEL }}.tar.gz
+             mv linux-linux-${{ env.LEVEL }} linux-${{ env.VERSION }}
+             tar -c linux-${{ env.VERSION }} | xz -T0 > linux-${{ env.VERSION }}.tar.xz
+             sha256sum linux-${{ env.VERSION }}.tar.xz > sha256sum
+      - name: Delete tag
+        run: gh release delete v${{ env.LEVEL }} --cleanup-tag || true
+        env:
+            GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Release build artifacts
+        uses: ncipollo/release-action@main
+        with:
+          commit: ${{ env.HASH }}
+          name: Linux ${{ env.T }} ${{ env.DATE }}
+          allowUpdates: true
+          prerelease: false
+          replacesArtifacts: true
+          tag: v${{ env.LEVEL }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+          artifacts: |
+                    *.xz
+                    sha256sum
+
+  kernel3:
+    name: kernel 6.19
+    runs-on: ubuntu-24.04-arm
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@main
+        with:
+          ref: refs/heads/linux-6.19
+      - name: kernel version
+        run: |
+             echo "VERSION=$(awk '/^VERSION =/{a=$3};/^PATCHLEVEL =/{b=$3};/^SUBLEVEL =/{c=$3};END{print a"."b"."c}' Makefile)" >> $GITHUB_ENV
+             echo "LEVEL=$(awk '/^VERSION =/{a=$3};/^PATCHLEVEL =/{b=$3};END{print a"."b}' Makefile)" >> $GITHUB_ENV
+             echo "T=$(make kernelversion)" >> $GITHUB_ENV
+             echo "DATE=$(date +'%Y.%m.%d')" >> $GITHUB_ENV
+             echo "HASH=$(git log -1 --format="%H")" >> $GITHUB_ENV
+      - name: Pack kernel
+        run: |
+             wget https://github.com/mj22226/linux/archive/linux-${{ env.LEVEL }}.tar.gz
+             tar -xf linux-${{ env.LEVEL }}.tar.gz
+             mv linux-linux-${{ env.LEVEL }} linux-${{ env.VERSION }}
+             tar -c linux-${{ env.VERSION }} | xz -T0 > linux-${{ env.VERSION }}.tar.xz
+             sha256sum linux-${{ env.VERSION }}.tar.xz > sha256sum
+      - name: Delete tag
+        run: gh release delete v${{ env.LEVEL }} --cleanup-tag || true
+        env:
+            GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Release build artifacts
+        uses: ncipollo/release-action@main
+        with:
+          commit: ${{ env.HASH }}
+          name: Linux ${{ env.T }} ${{ env.DATE }}
+          allowUpdates: true
+          prerelease: false
+          replacesArtifacts: true
+          tag: v${{ env.LEVEL }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+          artifacts: |
+                    *.xz
+                    sha256sum
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
