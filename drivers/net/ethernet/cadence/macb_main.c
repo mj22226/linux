@@ -2424,6 +2424,11 @@ static netdev_tx_t macb_start_xmit(struct sk_buff *skb, struct net_device *dev)
 	skb_tx_timestamp(skb);
 
 	spin_lock(&bp->lock);
+
+	/* TSTART write might get dropped, so make the IRQ retrigger a buffer read */
+	if (macb_readl(bp, TSR) & MACB_BIT(TGO))
+		queue->tx_pending = 1;
+
 	macb_writel(bp, NCR, macb_readl(bp, NCR) | MACB_BIT(TSTART));
 	spin_unlock(&bp->lock);
 
