@@ -1094,7 +1094,7 @@ void __init_or_module apply_seal_endbr(s32 *start, s32 *end) { }
 
 #ifdef CONFIG_CFI_AUTO_DEFAULT
 #define __CFI_DEFAULT	CFI_AUTO
-#elif defined(CONFIG_CFI_CLANG)
+#elif defined(CONFIG_CFI)
 #define __CFI_DEFAULT	CFI_KCFI
 #else
 #define __CFI_DEFAULT	CFI_OFF
@@ -1102,7 +1102,7 @@ void __init_or_module apply_seal_endbr(s32 *start, s32 *end) { }
 
 enum cfi_mode cfi_mode __ro_after_init = __CFI_DEFAULT;
 
-#ifdef CONFIG_CFI_CLANG
+#ifdef CONFIG_CFI
 struct bpf_insn;
 
 /* Must match bpf_func_t / DEFINE_BPF_PROG_RUN() */

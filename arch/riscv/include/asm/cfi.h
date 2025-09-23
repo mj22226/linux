@@ -11,7 +11,7 @@
 
 struct pt_regs;
 
-#ifdef CONFIG_CFI_CLANG
+#ifdef CONFIG_CFI
 enum bug_trap_type handle_cfi_failure(struct pt_regs *regs);
 #define __bpfcall
 static inline int cfi_get_offset(void)
@@ -35,6 +35,6 @@ static inline u32 cfi_get_func_hash(void *func)
 {
 	return 0;
 }
-#endif /* CONFIG_CFI_CLANG */
+#endif /* CONFIG_CFI */
 
 #endif /* _ASM_RISCV_CFI_H */

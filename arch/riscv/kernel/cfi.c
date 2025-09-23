@@ -76,7 +76,7 @@ enum bug_trap_type handle_cfi_failure(struct pt_regs *regs)
 	return report_cfi_failure(regs, regs->epc, &target, type);
 }
 
-#ifdef CONFIG_CFI_CLANG
+#ifdef CONFIG_CFI
 struct bpf_insn;
 
 /* Must match bpf_func_t / DEFINE_BPF_PROG_RUN() */

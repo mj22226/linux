@@ -103,7 +103,7 @@ extern enum cfi_mode cfi_mode;
 
 struct pt_regs;
 
-#ifdef CONFIG_CFI_CLANG
+#ifdef CONFIG_CFI
 enum bug_trap_type handle_cfi_failure(struct pt_regs *regs);
 #define __bpfcall
 extern u32 cfi_bpf_hash;
@@ -148,7 +148,7 @@ static inline u32 cfi_get_func_hash(void *func)
 {
 	return 0;
 }
-#endif /* CONFIG_CFI_CLANG */
+#endif /* CONFIG_CFI */
 
 #if HAS_KERNEL_IBT == 1
 #define CFI_NOSEAL(x)	asm(IBT_NOSEAL(__stringify(x)))
