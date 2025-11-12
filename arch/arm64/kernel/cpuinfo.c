@@ -219,6 +219,10 @@ static int c_show(struct seq_file *m, void *v)
 	bool compat = personality(current->personality) == PER_LINUX32;
 	struct cpuinfo_arm64 *cpuinfo = v;
 	u32 midr = cpuinfo->reg_midr;
+	struct device_node *np;
+	const char *model;
+	const char *serial;
+	u32 revision;
 
 	/*
 	 * glibc reads /proc/cpuinfo to determine the number of
@@ -274,28 +278,6 @@ static int c_show(struct seq_file *m, void *v)
 	seq_printf(m, "CPU part\t: 0x%03x\n", MIDR_PARTNUM(midr));
 	seq_printf(m, "CPU revision\t: %d\n\n", MIDR_REVISION(midr));
 
-	return 0;
-}
-
-static void *c_start(struct seq_file *m, loff_t *pos)
-{
-	*pos = cpumask_next(*pos - 1, cpu_online_mask);
-	return *pos < nr_cpu_ids ? &per_cpu(cpu_data, *pos) : NULL;
-}
-
-static void *c_next(struct seq_file *m, void *v, loff_t *pos)
-{
-	++*pos;
-	return c_start(m, pos);
-}
-
-static void c_stop(struct seq_file *m, void *v)
-{
-	struct device_node *np;
-	const char *model;
-	const char *serial;
-	u32 revision;
-
 	np = of_find_node_by_path("/system");
 	if (np) {
 		if (!of_property_read_u32(np, "linux,revision", &revision))
@@ -313,6 +295,24 @@ static void c_stop(struct seq_file *m, void *v)
 			seq_printf(m, "Model\t\t: %s\n", model);
 		of_node_put(np);
 	}
+
+	return 0;
+}
+
+static void *c_start(struct seq_file *m, loff_t *pos)
+{
+	*pos = cpumask_next(*pos - 1, cpu_online_mask);
+	return *pos < nr_cpu_ids ? &per_cpu(cpu_data, *pos) : NULL;
+}
+
+static void *c_next(struct seq_file *m, void *v, loff_t *pos)
+{
+	++*pos;
+	return c_start(m, pos);
+}
+
+static void c_stop(struct seq_file *m, void *v)
+{
 }
 
 const struct seq_operations cpuinfo_op = {
