@@ -1517,7 +1517,7 @@ static struct phy_driver broadcom_drivers[] = {
 	.set_wol	= bcm54xx_phy_set_wol,
 	.led_brightness_set	= bcm_phy_led_brightness_set,
 }, {
-	PHY_ID_MATCH_EXACT(PHY_ID_BCM5461),
+	PHY_ID_MATCH_EXACT(PHY_ID_BCM54213PE),
 	.name		= "Broadcom BCM54213PE",
 	/* PHY_GBIT_FEATURES */
 	.get_sset_count	= bcm_phy_get_sset_count,
