@@ -81,4 +81,4 @@ obj-$(CONFIG_PERF_EVENTS)	+= perf_pai_crypto.o perf_pai_ext.o
 obj-$(CONFIG_TRACEPOINTS)	+= trace.o
 
 # vdso
-obj-y				+= vdso64/
+obj-y				+= vdso/
