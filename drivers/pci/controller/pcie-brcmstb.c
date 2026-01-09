@@ -5,6 +5,7 @@
 #include <linux/bitops.h>
 #include <linux/clk.h>
 #include <linux/compiler.h>
+#include <linux/debugfs.h>
 #include <linux/delay.h>
 #include <linux/init.h>
 #include <linux/interrupt.h>
@@ -46,7 +47,10 @@
 #define  PCIE_RC_CFG_PRIV1_ID_VAL3_CLASS_CODE_MASK	0xffffff
 
 #define PCIE_RC_CFG_PRIV1_LINK_CAPABILITY			0x04dc
-#define  PCIE_RC_CFG_PRIV1_LINK_CAPABILITY_MAX_LINK_WIDTH_MASK	0x1f0
+#define  PCIE_RC_CFG_PRIV1_LINK_CAPABILITY_ASPM_SUPPORT_MASK	0xc00
+#define  PCIE_RC_CFG_PRIV1_LINK_CAPABILITY_ASPM_SUPPORT_L0S	0x1
+#define  PCIE_RC_CFG_PRIV1_LINK_CAPABILITY_ASPM_SUPPORT_L1	0x2
+#define  PCIE_RC_CFG_PRIV1_LINK_CAPABILITY_MAX_LINK_SPEED_MASK	0xf
 
 #define PCIE_RC_CFG_PRIV1_ROOT_CAP			0x4f8
 #define  PCIE_RC_CFG_PRIV1_ROOT_CAP_L1SS_MODE_MASK	0xf8
@@ -55,8 +59,37 @@
 #define PCIE_RC_DL_MDIO_WR_DATA				0x1104
 #define PCIE_RC_DL_MDIO_RD_DATA				0x1108
 
-#define PCIE_RC_PL_REG_PHY_CTL_1			0x1804
-#define  PCIE_RC_PL_REG_PHY_CTL_1_REG_P2_POWERDOWN_ENA_NOSYNC_MASK	0x8
+#define PCIE_RC_PL_PHY_CTL_15				0x184c
+#define  PCIE_RC_PL_PHY_CTL_15_DIS_PLL_PD_MASK		0x400000
+#define  PCIE_RC_PL_PHY_CTL_15_PM_CLK_PERIOD_MASK	0xff
+
+#define PCIE_RC_PL_STATS_CTRL				0x1940
+#define  PCIE_RC_PL_STATS_CTRL_EN_MASK			0x1
+#define  PCIE_RC_PL_STATS_CTRL_LEN_MASK			0xfffffff0
+
+#define PCIE_RC_PL_STATS_TXTLP_LO			0x1944
+#define PCIE_RC_PL_STATS_TXTLP_HI			0x1948
+#define PCIE_RC_PL_STATS_TXDLLP_LO			0x194c
+#define PCIE_RC_PL_STATS_TXDLLP_HI			0x1950
+#define PCIE_RC_PL_STATS_RXTLP_LO			0x195c
+#define PCIE_RC_PL_STATS_RXTLP_HI			0x1960
+#define PCIE_RC_PL_STATS_RXDLLP_LO			0x1964
+#define PCIE_RC_PL_STATS_RXDLLP_HI			0x1968
+#define PCIE_RC_PL_STATS_RXPL_ERR			0x1974
+#define PCIE_RC_PL_STATS_RXDL_ERR			0x1978
+#define PCIE_RC_PL_STATS_RXTL_ERR			0x197c
+
+#define PCIE_RC_PL_LTSSM_STATS_3			0x19b0
+#define  PCIE_RC_PL_LTSSM_STATS_3_TIME_L0S_MASK		0xffff0000
+#define  PCIE_RC_PL_LTSSM_STATS_3_TIME_RECOV_MASK	0x0000ffff
+
+#define PCIE_RC_PL_LTSSM_STATS_CNT			0x19b4
+#define  PCIE_RC_PL_LTSSM_STATS_CNT_L0S_FAIL_MASK	0xffff0000
+#define  PCIE_RC_PL_LTSSM_STATS_CNT_RECOV_MASK		0x0000ffff
+
+#define PCIE_RC_PL_LTSSM_HIST_0				0x1cec
+#define PCIE_RC_PL_LTSSM_HIST(n)	\
+		(PCIE_RC_PL_LTSSM_HIST_0 + ((n) * 4))
 
 #define PCIE_MISC_MISC_CTRL				0x4008
 #define  PCIE_MISC_MISC_CTRL_PCIE_RCB_64B_MODE_MASK	0x80
@@ -130,11 +163,16 @@
 		PCIE_MISC_CPU_2_PCIE_MEM_WIN0_LIMIT_HI + ((win) * 8)
 
 #define  PCIE_MISC_HARD_PCIE_HARD_DEBUG_CLKREQ_DEBUG_ENABLE_MASK	0x2
+#define  PCIE_MISC_HARD_PCIE_HARD_DEBUG_PERST_ASSERT_MASK		0x8
+#define  PCIE_MISC_HARD_PCIE_HARD_DEBUG_REFCLK_OVRD_ENABLE_MASK		0x10000
+#define  PCIE_MISC_HARD_PCIE_HARD_DEBUG_REFCLK_OVRD_OUT_MASK		0x100000
 #define  PCIE_MISC_HARD_PCIE_HARD_DEBUG_L1SS_ENABLE_MASK		0x200000
 #define  PCIE_MISC_HARD_PCIE_HARD_DEBUG_SERDES_IDDQ_MASK		0x08000000
 #define  PCIE_BMIPS_MISC_HARD_PCIE_HARD_DEBUG_SERDES_IDDQ_MASK		0x00800000
 #define  PCIE_CLKREQ_MASK \
 	  (PCIE_MISC_HARD_PCIE_HARD_DEBUG_CLKREQ_DEBUG_ENABLE_MASK | \
+	   PCIE_MISC_HARD_PCIE_HARD_DEBUG_REFCLK_OVRD_ENABLE_MASK | \
+	   PCIE_MISC_HARD_PCIE_HARD_DEBUG_REFCLK_OVRD_OUT_MASK | \
 	   PCIE_MISC_HARD_PCIE_HARD_DEBUG_L1SS_ENABLE_MASK)
 
 #define PCIE_MISC_UBUS_BAR1_CONFIG_REMAP			0x40ac
@@ -148,9 +186,6 @@
 #define  MSI_INT_CLR			0x8
 #define  MSI_INT_MASK_SET		0x10
 #define  MSI_INT_MASK_CLR		0x14
-
-#define PCIE_EXT_CFG_DATA				0x8000
-#define PCIE_EXT_CFG_INDEX				0x9000
 
 #define  PCIE_RGR1_SW_INIT_1_PERST_MASK			0x1
 #define  PCIE_RGR1_SW_INIT_1_PERST_SHIFT		0x0
@@ -177,8 +212,9 @@
 #define MDIO_PORT0			0x0
 #define MDIO_DATA_MASK			0x7fffffff
 #define MDIO_PORT_MASK			0xf0000
+#define MDIO_PORT_EXT_MASK		0x200000
 #define MDIO_REGAD_MASK			0xffff
-#define MDIO_CMD_MASK			0xfff00000
+#define MDIO_CMD_MASK			0x00100000
 #define MDIO_CMD_READ			0x1
 #define MDIO_CMD_WRITE			0x0
 #define MDIO_DATA_DONE_MASK		0x80000000
@@ -210,6 +246,58 @@
 #define  PCIE_DVT_PMU_PCIE_PHY_CTRL_DAST_PWRDN_MASK		0x1
 #define  PCIE_DVT_PMU_PCIE_PHY_CTRL_DAST_PWRDN_SHIFT		0x0
 
+/* BCM7712/2712-specific registers */
+
+#define PCIE_RC_TL_VDM_CTL0				0x0a20
+#define  PCIE_RC_TL_VDM_CTL0_VDM_ENABLED_MASK		0x10000
+#define  PCIE_RC_TL_VDM_CTL0_VDM_IGNORETAG_MASK		0x20000
+#define  PCIE_RC_TL_VDM_CTL0_VDM_IGNOREVNDRID_MASK	0x40000
+
+#define PCIE_RC_TL_VDM_CTL1				0x0a0c
+#define  PCIE_RC_TL_VDM_CTL1_VDM_VNDRID0_MASK		0x0000ffff
+#define  PCIE_RC_TL_VDM_CTL1_VDM_VNDRID1_MASK		0xffff0000
+
+#define PCIE_MISC_CTRL_1					0x40A0
+#define  PCIE_MISC_CTRL_1_OUTBOUND_TC_MASK			0xf
+#define  PCIE_MISC_CTRL_1_OUTBOUND_NO_SNOOP_MASK		BIT(3)
+#define  PCIE_MISC_CTRL_1_OUTBOUND_RO_MASK			BIT(4)
+#define  PCIE_MISC_CTRL_1_EN_VDM_QOS_CONTROL_MASK		BIT(5)
+
+#define PCIE_MISC_UBUS_CTRL	0x40a4
+#define  PCIE_MISC_UBUS_CTRL_UBUS_PCIE_REPLY_ERR_DIS_MASK	BIT(13)
+#define  PCIE_MISC_UBUS_CTRL_UBUS_PCIE_REPLY_DECERR_DIS_MASK	BIT(19)
+
+#define PCIE_MISC_UBUS_TIMEOUT	0x40a8
+
+#define PCIE_MISC_RC_CONFIG_RETRY_TIMEOUT	0x405c
+
+/* AXI priority forwarding - automatic level-based */
+#define PCIE_MISC_TC_QUEUE_TO_QOS_MAP(x)		(0x4160 - (x) * 4)
+/* Defined in quarter-fullness */
+#define  QUEUE_THRESHOLD_34_TO_QOS_MAP_SHIFT		12
+#define  QUEUE_THRESHOLD_23_TO_QOS_MAP_SHIFT		8
+#define  QUEUE_THRESHOLD_12_TO_QOS_MAP_SHIFT		4
+#define  QUEUE_THRESHOLD_01_TO_QOS_MAP_SHIFT		0
+#define  QUEUE_THRESHOLD_MASK				0xf
+
+/* VDM messages indexing TCs to AXI priorities */
+/* Indexes 8-15 */
+#define PCIE_MISC_VDM_PRIORITY_TO_QOS_MAP_HI		0x4164
+/* Indexes 0-7 */
+#define PCIE_MISC_VDM_PRIORITY_TO_QOS_MAP_LO		0x4168
+#define  VDM_PRIORITY_TO_QOS_MAP_SHIFT(x)		(4 * (x))
+#define  VDM_PRIORITY_TO_QOS_MAP_MASK			0xf
+
+#define PCIE_MISC_AXI_INTF_CTRL 0x416C
+#define  AXI_EN_RCLK_QOS_ARRAY_FIX			BIT(13)
+#define  AXI_EN_QOS_UPDATE_TIMING_FIX			BIT(12)
+#define  AXI_DIS_QOS_GATING_IN_MASTER			BIT(11)
+#define  AXI_REQFIFO_EN_QOS_PROPAGATION			BIT(7)
+#define  AXI_BRIDGE_LOW_LATENCY_MODE			BIT(6)
+#define  AXI_MASTER_MAX_OUTSTANDING_REQUESTS_MASK	0x3f
+
+#define PCIE_MISC_AXI_READ_ERROR_DATA		0x4170
+
 /* Forward declarations */
 struct brcm_pcie;
 
@@ -237,13 +325,115 @@ struct inbound_win {
 	u64 cpu_addr;
 };
 
+#define TRACE_BUF_LEN 64
+struct trace_entry {
+	u8 st;
+	ktime_t ts;
+};
+
+static const char *brcm_pcie_decode_ltssm_state(u8 state)
+{
+	switch (state) {
+	case 0x01:
+		return "L0";
+	case 0x02:
+		return "L1";
+	case 0x03:
+		return "L2";
+	case 0x04:
+		return "RxL0s_TxL0s";
+	case 0x05:
+		return "RxL0_TxL0s";
+	case 0x09:
+		return "Polling.Active";
+	case 0x0A:
+		return "Polling.Configuration";
+	case 0x0C:
+		return "Polling.Compliance";
+	case 0x10:
+		return "Configuration.Link";
+	case 0x11:
+		return "Configuration.Linkwidth.Accept";
+	case 0x12:
+		return "Configuration.Lanenum.Wait";
+	case 0x13:
+		return "Confguration.Lanenum.Accept";
+	case 0x14:
+		return "Confguration.Complete";
+	case 0x15:
+		return "Configuration.Idle";
+	case 0x20:
+		return "Recovery.RcvrLock";
+	case 0x21:
+		return "Recovery.RcvrCfg";
+	case 0x22:
+		return "Recovery.Idle";
+	case 0x23:
+		return "Recovery.Speed";
+	case 0x24:
+		return "Recovery.EQ_Phase0";
+	case 0x25:
+		return "Recovery.EQ_Phase1";
+	case 0x26:
+		return "Recovery.EQ_Phase2";
+	case 0x27:
+		return "Recovery.EQ_Phase3";
+	case 0x40:
+		return "Disable";
+	case 0x43:
+		return "Reset";
+	case 0x47:
+		return "Loopback.Entry";
+	case 0x48:
+		return "Loopback.Active";
+	case 0x49:
+		return "Loopback.Exit";
+	case 0x4C:
+		return "Loopback.Master.Entry";
+	case 0x4D:
+		return "Loopback.Master.Active";
+	case 0x4E:
+		return "Loopback.Master.Exit";
+	case 0x70:
+		return "Recovery.Speed_Change";
+	case 0x80:
+		return "Detect.Quiet";
+	case 0x81:
+		return "Detect.Active";
+	case 0x82:
+		return "Detect.Wait";
+	case 0x83:
+		return "Detect.Active2";
+	default:
+	break;
+	}
+	return NULL;
+};
+
+/*
+ * The RESCAL block is tied to PCIe controller #1, regardless of the number of
+ * controllers, and turning off PCIe controller #1 prevents access to the RESCAL
+ * register blocks, therefore no other controller can access this register
+ * space, and depending upon the bus fabric we may get a timeout (UBUS/GISB),
+ * or a hang (AXI).
+ */
+#define CFG_QUIRK_AVOID_BRIDGE_SHUTDOWN		BIT(0)
+
+/*
+ * MDIO register map differences and required changes to the defaults mean that refclk
+ * spread-spectrum clocking isn't supportable.
+ */
+#define CFG_QUIRK_NO_SSC			BIT(1)
+
 struct pcie_cfg_data {
 	const int *offsets;
 	const enum pcie_soc_base soc_base;
 	const bool has_phy;
+	const u32 quirks;
 	u8 num_inbound_wins;
 	int (*perst_set)(struct brcm_pcie *pcie, u32 val);
 	int (*bridge_sw_init_set)(struct brcm_pcie *pcie, u32 val);
+	int (*post_setup)(struct brcm_pcie *pcie);
 };
 
 struct subdev_regulators {
@@ -289,6 +479,22 @@ struct brcm_pcie {
 	struct subdev_regulators *sr;
 	bool			ep_wakeup_capable;
 	const struct pcie_cfg_data	*cfg;
+	u32			tperst_clk_ms;
+	bool			trace_ltssm;
+	struct trace_entry	*ltssm_trace_buf;
+	/* Statistics exposed in debugfs */
+	struct dentry *debugfs_dir;
+	u64 tx_tlp;
+	u64 rx_tlp;
+	u64 tx_dllp;
+	u64 rx_dllp;
+	u32 pl_rx_err;
+	u32 dl_rx_err;
+	u32 tl_rx_err;
+	u16 l0s_exit_time;
+	u16 recov_time;
+	u16 l0s_fail_cnt;
+	u16 recov_cnt;
 };
 
 static inline bool is_bmips(const struct brcm_pcie *pcie)
@@ -318,6 +524,7 @@ static u32 brcm_pcie_mdio_form_pkt(int port, int regad, int cmd)
 {
 	u32 pkt = 0;
 
+	pkt |= FIELD_PREP(MDIO_PORT_EXT_MASK, port >> 4);
 	pkt |= FIELD_PREP(MDIO_PORT_MASK, port);
 	pkt |= FIELD_PREP(MDIO_REGAD_MASK, regad);
 	pkt |= FIELD_PREP(MDIO_CMD_MASK, cmd);
@@ -403,10 +610,10 @@ static void brcm_pcie_set_gen(struct brcm_pcie *pcie, int gen)
 	u16 lnkctl2 = readw(pcie->base + BRCM_PCIE_CAP_REGS + PCI_EXP_LNKCTL2);
 	u32 lnkcap = readl(pcie->base + PCIE_RC_CFG_PRIV1_LINK_CAPABILITY);
 
-	lnkcap = (lnkcap & ~PCI_EXP_LNKCAP_SLS) | gen;
+	u32p_replace_bits(&lnkcap, gen, PCI_EXP_LNKCAP_SLS);
 	writel(lnkcap, pcie->base + PCIE_RC_CFG_PRIV1_LINK_CAPABILITY);
 
-	lnkctl2 = (lnkctl2 & ~0xf) | gen;
+	u16p_replace_bits(&lnkctl2, gen, PCI_EXP_LNKCTL2_TLS);
 	writew(lnkctl2, pcie->base + BRCM_PCIE_CAP_REGS + PCI_EXP_LNKCTL2);
 }
 
@@ -463,7 +670,7 @@ static struct irq_chip brcm_msi_irq_chip = {
 
 static struct msi_domain_info brcm_msi_domain_info = {
 	.flags	= MSI_FLAG_USE_DEF_DOM_OPS | MSI_FLAG_USE_DEF_CHIP_OPS |
-		  MSI_FLAG_NO_AFFINITY | MSI_FLAG_MULTI_PCI_MSI,
+		  MSI_FLAG_NO_AFFINITY | MSI_FLAG_MULTI_PCI_MSI | MSI_FLAG_PCI_MSIX,
 	.chip	= &brcm_msi_irq_chip,
 };
 
@@ -548,7 +755,7 @@ static int brcm_irq_domain_alloc(struct irq_domain *domain, unsigned int virq,
 		return hwirq;
 
 	for (i = 0; i < nr_irqs; i++)
-		irq_domain_set_info(domain, virq + i, hwirq + i,
+		irq_domain_set_info(domain, virq + i, (irq_hw_number_t)hwirq + i,
 				    &brcm_msi_bottom_irq_chip, domain->host_data,
 				    handle_edge_irq, NULL, NULL);
 	return 0;
@@ -715,8 +922,8 @@ static void __iomem *brcm_pcie_map_bus(struct pci_bus *bus,
 
 	/* For devices, write to the config space index register */
 	idx = PCIE_ECAM_OFFSET(bus->number, devfn, 0);
-	writel(idx, pcie->base + PCIE_EXT_CFG_INDEX);
-	return base + PCIE_EXT_CFG_DATA + PCIE_ECAM_REG(where);
+	writel(idx, base + IDX_ADDR(pcie));
+	return base + DATA_ADDR(pcie) + PCIE_ECAM_REG(where);
 }
 
 static void __iomem *brcm7425_pcie_map_bus(struct pci_bus *bus,
@@ -815,6 +1022,141 @@ static int brcm_pcie_perst_set_generic(struct brcm_pcie *pcie, u32 val)
 	tmp = readl(pcie->base + PCIE_RGR1_SW_INIT_1(pcie));
 	u32p_replace_bits(&tmp, val, PCIE_RGR1_SW_INIT_1_PERST_MASK);
 	writel(tmp, pcie->base + PCIE_RGR1_SW_INIT_1(pcie));
+
+	return 0;
+}
+
+static int brcm_pcie_post_setup_bcm2712(struct brcm_pcie *pcie)
+{
+	const u16 data[] = { 0x50b9, 0xbda1, 0x0094, 0x97b4, 0x5030, 0x5030, 0x0007 };
+	const u8 regs[] = { 0x16, 0x17, 0x18, 0x19, 0x1b, 0x1c, 0x1e };
+	int ret, i;
+	u32 tmp;
+	u8 qos_map[8];
+
+	/* Allow a 54MHz (xosc) refclk source */
+	ret = brcm_pcie_mdio_write(pcie->base, MDIO_PORT0, SET_ADDR_OFFSET, 0x1600);
+	if (ret < 0)
+		return ret;
+
+	for (i = 0; i < ARRAY_SIZE(regs); i++) {
+		ret = brcm_pcie_mdio_write(pcie->base, MDIO_PORT0, regs[i], data[i]);
+		if (ret < 0)
+			return ret;
+	}
+
+	usleep_range(100, 200);
+
+	/*
+	 * Set L1SS sub-state timers to avoid lengthy state transitions,
+	 * PM clock period is 18.52ns (1/54MHz, round down).
+	 */
+	tmp = readl(pcie->base + PCIE_RC_PL_PHY_CTL_15);
+	tmp &= ~PCIE_RC_PL_PHY_CTL_15_PM_CLK_PERIOD_MASK;
+	tmp |= 0x12;
+	writel(tmp, pcie->base + PCIE_RC_PL_PHY_CTL_15);
+
+	/*
+	 * BCM7712/2712 uses a UBUS-AXI bridge.
+	 * Suppress AXI error responses and return 1s for read failures.
+	 */
+	tmp = readl(pcie->base + PCIE_MISC_UBUS_CTRL);
+	u32p_replace_bits(&tmp, 1, PCIE_MISC_UBUS_CTRL_UBUS_PCIE_REPLY_ERR_DIS_MASK);
+	u32p_replace_bits(&tmp, 1, PCIE_MISC_UBUS_CTRL_UBUS_PCIE_REPLY_DECERR_DIS_MASK);
+	writel(tmp, pcie->base + PCIE_MISC_UBUS_CTRL);
+	writel(0xffffffff, pcie->base + PCIE_MISC_AXI_READ_ERROR_DATA);
+
+	/*
+	 * Adjust timeouts. The UBUS timeout also affects Configuration Request
+	 * Retry responses, as the request will get terminated if
+	 * either timeout expires, so both have to be a large value
+	 * (in clocks of 750MHz).
+	 * Set UBUS timeout to 250ms, then set RC config retry timeout
+	 * to be ~240ms.
+	 *
+	 * If CRSSVE=1 this will stop the core from blocking on a Retry
+	 * response, but does require the device to be well-behaved...
+	 */
+	writel(0xB2D0000, pcie->base + PCIE_MISC_UBUS_TIMEOUT);
+	writel(0xABA0000, pcie->base + PCIE_MISC_RC_CONFIG_RETRY_TIMEOUT);
+
+	/*
+	 * BCM2712 has a configurable QoS mechanism that assigns TLP Traffic Classes
+	 * to separate AXI IDs with a configurable priority scheme.
+	 * Dynamic priority elevation is supported through reception of Type 1
+	 * Vendor Defined Messages, but several bugs make this largely ineffective.
+	 */
+
+	/* Disable broken forwarding search. Set chicken bits for 2712D0 */
+	tmp = readl(pcie->base + PCIE_MISC_AXI_INTF_CTRL);
+	tmp &= ~AXI_REQFIFO_EN_QOS_PROPAGATION;
+	tmp |= AXI_EN_RCLK_QOS_ARRAY_FIX | AXI_EN_QOS_UPDATE_TIMING_FIX |
+		AXI_DIS_QOS_GATING_IN_MASTER;
+	writel(tmp, pcie->base + PCIE_MISC_AXI_INTF_CTRL);
+
+	/*
+	 * Work around spurious QoS=0 assignments to inbound traffic.
+	 * If the QOS_UPDATE_TIMING_FIX bit is Reserved-0, then this is a
+	 * 2712C1 chip, or a single-lane RC. Use the best-effort alternative
+	 * which is to partially throttle AXI requests in-flight to SDRAM.
+	 */
+	tmp = readl(pcie->base + PCIE_MISC_AXI_INTF_CTRL);
+	if (!(tmp & AXI_EN_QOS_UPDATE_TIMING_FIX)) {
+		tmp &= ~AXI_MASTER_MAX_OUTSTANDING_REQUESTS_MASK;
+		tmp |= 15;
+		writel(tmp, pcie->base + PCIE_MISC_AXI_INTF_CTRL);
+	}
+
+	/* Disable VDM reception by default */
+	tmp = readl(pcie->base + PCIE_MISC_CTRL_1);
+	tmp &= ~PCIE_MISC_CTRL_1_EN_VDM_QOS_CONTROL_MASK;
+	writel(tmp, pcie->base + PCIE_MISC_CTRL_1);
+
+	if (!of_property_read_u8_array(pcie->np, "brcm,fifo-qos-map", qos_map, 4)) {
+
+		/*
+		 * Backpressure mode - each element is QoS for each
+		 * quartile of FIFO level. Each TC gets the same map, because
+		 * this mode is intended for nonrealtime EPs.
+		 */
+		tmp = 0;
+		for (i = 0; i < 4; i++) {
+			/* Priorities range from 0-15 */
+			qos_map[i] &= 0x0f;
+			tmp |= qos_map[i] << (i * 4);
+		}
+		for (i = 0; i < 8; i++)
+			writel(tmp, pcie->base + PCIE_MISC_TC_QUEUE_TO_QOS_MAP(i));
+
+	} else if (!of_property_read_u8_array(pcie->np, "brcm,vdm-qos-map", qos_map, 8)) {
+		/* Enable VDM reception */
+		tmp = readl(pcie->base + PCIE_MISC_CTRL_1);
+		tmp |= PCIE_MISC_CTRL_1_EN_VDM_QOS_CONTROL_MASK;
+		writel(tmp, pcie->base + PCIE_MISC_CTRL_1);
+
+		tmp = 0;
+		for (i = 0; i < 8; i++) {
+			/* Priorities range from 0-15 */
+			qos_map[i] &= 0x0f;
+			tmp |= qos_map[i] << (i * 4);
+		}
+		/* Broken forwarding means no point separating panic priorities from normal */
+		writel(tmp, pcie->base + PCIE_MISC_VDM_PRIORITY_TO_QOS_MAP_LO);
+		writel(tmp, pcie->base + PCIE_MISC_VDM_PRIORITY_TO_QOS_MAP_HI);
+
+		/* Match Vendor ID of 0 */
+		writel(0, pcie->base + PCIE_RC_TL_VDM_CTL1);
+
+		/*
+		 * Forward VDMs to priority interface anyway -
+		 * useful for debugging starvation through the received VDM count fields.
+		 */
+		tmp = readl(pcie->base + PCIE_RC_TL_VDM_CTL0);
+		tmp |= PCIE_RC_TL_VDM_CTL0_VDM_ENABLED_MASK |
+			PCIE_RC_TL_VDM_CTL0_VDM_IGNORETAG_MASK |
+			PCIE_RC_TL_VDM_CTL0_VDM_IGNOREVNDRID_MASK;
+		writel(tmp, pcie->base + PCIE_RC_TL_VDM_CTL0);
+	}
 
 	return 0;
 }
@@ -1028,7 +1370,7 @@ static int brcm_pcie_setup(struct brcm_pcie *pcie)
 	void __iomem *base = pcie->base;
 	struct pci_host_bridge *bridge;
 	struct resource_entry *entry;
-	u32 tmp, burst, num_lanes, num_lanes_cap;
+	u32 tmp, burst, aspm_support;
 	u8 num_out_wins = 0;
 	int num_inbound_wins = 0;
 	int memc, ret;
@@ -1127,32 +1469,15 @@ static int brcm_pcie_setup(struct brcm_pcie *pcie)
 		pcie->msi_target_addr = BRCM_MSI_TARGET_ADDR_GT_4GB;
 
 
-	/* Don't advertise L0s capability if 'aspm-no-l0s' */
+	/* Always advertise L1 capability */
+	aspm_support = PCIE_RC_CFG_PRIV1_LINK_CAPABILITY_ASPM_SUPPORT_L1;
+	/* Advertise L0s capability unless 'aspm-no-l0s' is set */
+	if (!of_property_read_bool(pcie->np, "aspm-no-l0s"))
+		aspm_support |= PCIE_RC_CFG_PRIV1_LINK_CAPABILITY_ASPM_SUPPORT_L0S;
 	tmp = readl(base + PCIE_RC_CFG_PRIV1_LINK_CAPABILITY);
-	if (of_property_read_bool(pcie->np, "aspm-no-l0s"))
-		tmp &= ~PCI_EXP_LNKCAP_ASPM_L0S;
+	u32p_replace_bits(&tmp, aspm_support,
+		PCIE_RC_CFG_PRIV1_LINK_CAPABILITY_ASPM_SUPPORT_MASK);
 	writel(tmp, base + PCIE_RC_CFG_PRIV1_LINK_CAPABILITY);
-
-	/* 'tmp' still holds the contents of PRIV1_LINK_CAPABILITY */
-	num_lanes_cap = u32_get_bits(tmp, PCIE_RC_CFG_PRIV1_LINK_CAPABILITY_MAX_LINK_WIDTH_MASK);
-	num_lanes = 0;
-
-	/*
-	 * Use hardware negotiated Max Link Width value by default.  If the
-	 * "num-lanes" DT property is present, assume that the chip's default
-	 * link width capability information is incorrect/undesired and use the
-	 * specified value instead.
-	 */
-	if (!of_property_read_u32(pcie->np, "num-lanes", &num_lanes) &&
-	    num_lanes && num_lanes <= 4 && num_lanes_cap != num_lanes) {
-		u32p_replace_bits(&tmp, num_lanes,
-			PCIE_RC_CFG_PRIV1_LINK_CAPABILITY_MAX_LINK_WIDTH_MASK);
-		writel(tmp, base + PCIE_RC_CFG_PRIV1_LINK_CAPABILITY);
-		tmp = readl(base + PCIE_RC_PL_REG_PHY_CTL_1);
-		u32p_replace_bits(&tmp, 1,
-			PCIE_RC_PL_REG_PHY_CTL_1_REG_P2_POWERDOWN_ENA_NOSYNC_MASK);
-		writel(tmp, base + PCIE_RC_PL_REG_PHY_CTL_1);
-	}
 
 	/*
 	 * For config space accesses on the RC, show the right class for
@@ -1199,6 +1524,12 @@ static int brcm_pcie_setup(struct brcm_pcie *pcie)
 	u32p_replace_bits(&tmp, PCIE_RC_CFG_VENDOR_SPCIFIC_REG1_LITTLE_ENDIAN,
 		PCIE_RC_CFG_VENDOR_VENDOR_SPECIFIC_REG1_ENDIAN_MODE_BAR2_MASK);
 	writel(tmp, base + PCIE_RC_CFG_VENDOR_VENDOR_SPECIFIC_REG1);
+
+	if (pcie->cfg->post_setup) {
+		ret = pcie->cfg->post_setup(pcie);
+		if (ret < 0)
+			return ret;
+	}
 
 	return 0;
 }
@@ -1272,35 +1603,194 @@ static void brcm_config_clkreq(struct brcm_pcie *pcie)
 
 	} else {
 		/*
-		 * "safe" -- No power savings; refclk is driven by RC
+		 * "safe" -- No power savings; refclk and CLKREQ# are driven by RC
 		 * unconditionally.
 		 */
 		if (strcmp(mode, "safe") != 0)
 			dev_err(pcie->dev, err_msg);
 		mode = "safe";
+		clkreq_cntl |= PCIE_MISC_HARD_PCIE_HARD_DEBUG_REFCLK_OVRD_OUT_MASK;
+		clkreq_cntl |= PCIE_MISC_HARD_PCIE_HARD_DEBUG_REFCLK_OVRD_ENABLE_MASK;
+		/*
+		 * Un-advertise L1ss as configuring an EP to enter L1.x with CLKREQ#
+		 * physically unconnected will result in a dead link.
+		 */
+		tmp = readl(pcie->base + PCIE_RC_CFG_PRIV1_ROOT_CAP);
+		u32p_replace_bits(&tmp, 2, PCIE_RC_CFG_PRIV1_ROOT_CAP_L1SS_MODE_MASK);
+		writel(tmp, pcie->base + PCIE_RC_CFG_PRIV1_ROOT_CAP);
 	}
 	writel(clkreq_cntl, pcie->base + HARD_DEBUG(pcie));
 
 	dev_info(pcie->dev, "clkreq-mode set to %s\n", mode);
 }
 
+static void brcm_pcie_stats_trigger(struct brcm_pcie *pcie, u32 micros)
+{
+	u32 tmp;
+
+	/*
+	 * A 0->1 transition on CTRL_EN is required to clear counters and start capture.
+	 * A microseconds count of 0 starts continuous gathering.
+	 */
+	tmp = readl(pcie->base + PCIE_RC_PL_STATS_CTRL);
+	u32p_replace_bits(&tmp, 0, PCIE_RC_PL_STATS_CTRL_EN_MASK);
+	writel(tmp, pcie->base + PCIE_RC_PL_STATS_CTRL);
+
+	if (micros >= (1 << 28))
+		micros = (1 << 28) - 1U;
+	u32p_replace_bits(&tmp, micros, PCIE_RC_PL_STATS_CTRL_LEN_MASK);
+	u32p_replace_bits(&tmp, 1, PCIE_RC_PL_STATS_CTRL_EN_MASK);
+
+	writel(tmp, pcie->base + PCIE_RC_PL_STATS_CTRL);
+}
+
+static void brcm_pcie_stats_capture(struct brcm_pcie *pcie)
+{
+	u32 tmp;
+
+	/* Snapshot the counters - capture engine may still be running */
+	pcie->tx_tlp = (u64)readl(pcie->base + PCIE_RC_PL_STATS_TXTLP_LO) +
+			((u64)readl(pcie->base + PCIE_RC_PL_STATS_TXTLP_HI) << 32ULL);
+	pcie->rx_tlp = (u64)readl(pcie->base + PCIE_RC_PL_STATS_RXTLP_LO) +
+			((u64)readl(pcie->base + PCIE_RC_PL_STATS_RXTLP_HI) << 32ULL);
+	pcie->tx_dllp = (u64)readl(pcie->base + PCIE_RC_PL_STATS_TXDLLP_LO) +
+			((u64)readl(pcie->base + PCIE_RC_PL_STATS_TXDLLP_HI) << 32ULL);
+	pcie->rx_dllp = (u64)readl(pcie->base + PCIE_RC_PL_STATS_RXDLLP_LO) +
+			((u64)readl(pcie->base + PCIE_RC_PL_STATS_RXDLLP_HI) << 32ULL);
+
+	pcie->pl_rx_err = readl(pcie->base + PCIE_RC_PL_STATS_RXPL_ERR);
+	pcie->dl_rx_err = readl(pcie->base + PCIE_RC_PL_STATS_RXDL_ERR);
+	pcie->tl_rx_err = readl(pcie->base + PCIE_RC_PL_STATS_RXTL_ERR);
+
+	tmp = readl(pcie->base + PCIE_RC_PL_LTSSM_STATS_3);
+	pcie->l0s_exit_time = FIELD_GET(PCIE_RC_PL_LTSSM_STATS_3_TIME_L0S_MASK, tmp);
+	pcie->recov_time = FIELD_GET(PCIE_RC_PL_LTSSM_STATS_3_TIME_RECOV_MASK, tmp);
+
+	tmp = readl(pcie->base + PCIE_RC_PL_LTSSM_STATS_CNT);
+	pcie->l0s_fail_cnt = FIELD_GET(PCIE_RC_PL_LTSSM_STATS_CNT_L0S_FAIL_MASK, tmp);
+	pcie->recov_cnt = FIELD_GET(PCIE_RC_PL_LTSSM_STATS_CNT_RECOV_MASK, tmp);
+}
+
+/*
+ * Dump the link state machine transitions for the first 100ms after fundamental reset release.
+ * Most link training completes in a far shorter time.
+ *
+ * The CPU-intensive nature of the capture means that this should only be used to
+ * diagnose fatal link startup failures.
+ */
+static void brcm_pcie_trace_link_start(struct brcm_pcie *pcie)
+{
+	struct device *dev = pcie->dev;
+	struct trace_entry *trace = pcie->ltssm_trace_buf;
+	int i = 0, j = 0;
+	u8 cur_state;
+	u32 ltssm_hist0, ltssm_hist1 = 0;
+	ktime_t start, timeout;
+
+	start = ktime_get();
+	timeout = ktime_add(start, ktime_set(0, NSEC_PER_MSEC * 100));
+	/*
+	 * The LTSSM history registers are implemented as an "open FIFO" where register data
+	 * shuffles along with each push - or moves under one's feet, if you prefer.
+	 * We can't atomically read more than one 32bit value (covering 4 entries), so poll
+	 * quickly while guessing the position of the first value we haven't seen yet.
+	 */
+	do {
+		/*
+		 * This delay appears to work around a HW bug where data can temporarily
+		 * appear nibble-shifted.
+		 */
+		ndelay(10);
+		/* Snapshot the FIFO state. Lowest different "byte" is latest data. */
+		ltssm_hist0 = readl(pcie->base + PCIE_RC_PL_LTSSM_HIST(3));
+		if (ltssm_hist0 == ltssm_hist1)
+			continue;
+		ltssm_hist1 = ltssm_hist0;
+
+		/*
+		 * If the "fifo" has changed, we don't know by how much.
+		 * Scan through byte-wise and look for states
+		 */
+		for (j = 24; j >= 0; j -= 8) {
+			cur_state = (ltssm_hist0 >> j) & 0xff;
+			/* Unassigned entry */
+			if (cur_state == 0xff)
+				continue;
+			if (i > 0 && trace[i-1].st == cur_state) {
+				/*
+				 * This is probably what we last saw.
+				 * Next byte should be a new entry.
+				 */
+				j -= 8;
+				break;
+			} else if (i == 0 && brcm_pcie_decode_ltssm_state(cur_state)) {
+				/* Probably a new valid entry */
+				break;
+			}
+		}
+
+		for (; j >= 0 && i < TRACE_BUF_LEN; j -= 8) {
+			cur_state = (ltssm_hist0 >> j) & 0xff;
+			trace[i].st = cur_state;
+			trace[i].ts = ktime_sub(ktime_get(), start);
+			i++;
+		}
+		if (i == TRACE_BUF_LEN)
+			break;
+	} while (!ktime_after(ktime_get(), timeout));
+
+	dev_info(dev, "LTSSM trace captured %d events (max %u):\n",
+		i, TRACE_BUF_LEN);
+	for (i = 0; i < TRACE_BUF_LEN; i++) {
+		if (!trace[i].st)
+			break;
+		dev_info(dev, "%llu : %02x - %s\n",
+			 ktime_to_us(trace[i].ts),
+			 trace[i].st,
+			 brcm_pcie_decode_ltssm_state(trace[i].st));
+	}
+}
+
 static int brcm_pcie_start_link(struct brcm_pcie *pcie)
 {
 	struct device *dev = pcie->dev;
 	void __iomem *base = pcie->base;
-	u16 nlw, cls, lnksta;
+	u16 nlw, cls, lnksta, tmp16;
 	bool ssc_good = false;
 	int ret, i;
+	u32 tmp;
 
 	/* Limit the generation if specified */
 	if (pcie->gen)
 		brcm_pcie_set_gen(pcie, pcie->gen);
 
+	brcm_pcie_stats_trigger(pcie, 0);
+
 	/* Unassert the fundamental reset */
-	ret = pcie->cfg->perst_set(pcie, 0);
+	if (pcie->tperst_clk_ms) {
+		/*
+		 * Increase Tperst_clk time by forcing PERST# output low while
+		 * the internal reset is released, so the PLL generates stable
+		 * refclk output further in advance of PERST# deassertion.
+		 */
+		tmp = readl(pcie->base + HARD_DEBUG(pcie));
+		u32p_replace_bits(&tmp, 1, PCIE_MISC_HARD_PCIE_HARD_DEBUG_PERST_ASSERT_MASK);
+		writel(tmp, pcie->base + HARD_DEBUG(pcie));
+
+		ret = pcie->cfg->perst_set(pcie, 0);
+		fsleep(pcie->tperst_clk_ms * USEC_PER_MSEC);
+
+		tmp = readl(pcie->base + HARD_DEBUG(pcie));
+		u32p_replace_bits(&tmp, 0, PCIE_MISC_HARD_PCIE_HARD_DEBUG_PERST_ASSERT_MASK);
+		writel(tmp, pcie->base + HARD_DEBUG(pcie));
+	} else {
+		ret = pcie->cfg->perst_set(pcie, 0);
+	}
 	if (ret)
 		return ret;
 
+	if (pcie->trace_ltssm)
+		brcm_pcie_trace_link_start(pcie);
 	/*
 	 * Wait for 100ms after PERST# deassertion; see PCIe CEM specification
 	 * sections 2.2, PCIe r5.0, 6.6.1.
@@ -1336,6 +1826,20 @@ static int brcm_pcie_start_link(struct brcm_pcie *pcie)
 	dev_info(dev, "link up, %s x%u %s\n",
 		 pci_speed_string(pcie_link_speed[cls]), nlw,
 		 ssc_good ? "(SSC)" : "(!SSC)");
+
+	/* Snapshot the boot-time stats */
+	brcm_pcie_stats_capture(pcie);
+
+	/*
+	 * RootCtl bits are reset by perst_n, which undoes pci_enable_crs()
+	 * called prior to pci_add_new_bus() during probe. Re-enable here.
+	 */
+	tmp16 = readw(base + BRCM_PCIE_CAP_REGS + PCI_EXP_RTCAP);
+	if (tmp16 & PCI_EXP_RTCAP_CRSVIS) {
+		tmp16 = readw(base + BRCM_PCIE_CAP_REGS + PCI_EXP_RTCTL);
+		u16p_replace_bits(&tmp16, 1, PCI_EXP_RTCTL_CRSSVE);
+		writew(tmp16, base + BRCM_PCIE_CAP_REGS + PCI_EXP_RTCTL);
+	}
 
 	return 0;
 }
@@ -1511,8 +2015,9 @@ static int brcm_pcie_turn_off(struct brcm_pcie *pcie)
 	u32p_replace_bits(&tmp, 1, PCIE_MISC_HARD_PCIE_HARD_DEBUG_SERDES_IDDQ_MASK);
 	writel(tmp, base + HARD_DEBUG(pcie));
 
-	/* Shutdown PCIe bridge */
-	ret = pcie->cfg->bridge_sw_init_set(pcie, 1);
+	if (!(pcie->cfg->quirks & CFG_QUIRK_AVOID_BRIDGE_SHUTDOWN))
+		/* Shutdown PCIe bridge */
+		ret = pcie->cfg->bridge_sw_init_set(pcie, 1);
 
 	return ret;
 }
@@ -1656,6 +2161,7 @@ err_disable_clk:
 
 static void __brcm_pcie_remove(struct brcm_pcie *pcie)
 {
+	debugfs_remove_recursive(pcie->debugfs_dir);
 	brcm_msi_remove(pcie);
 	brcm_pcie_turn_off(pcie);
 	if (brcm_phy_stop(pcie))
@@ -1678,7 +2184,7 @@ static void brcm_pcie_remove(struct platform_device *pdev)
 static const int pcie_offsets[] = {
 	[RGR1_SW_INIT_1]	= 0x9210,
 	[EXT_CFG_INDEX]		= 0x9000,
-	[EXT_CFG_DATA]		= 0x9004,
+	[EXT_CFG_DATA]		= 0x8000,
 	[PCIE_HARD_DEBUG]	= 0x4204,
 	[PCIE_INTR2_CPU_BASE]	= 0x4300,
 };
@@ -1686,7 +2192,7 @@ static const int pcie_offsets[] = {
 static const int pcie_offsets_bcm7278[] = {
 	[RGR1_SW_INIT_1]	= 0xc010,
 	[EXT_CFG_INDEX]		= 0x9000,
-	[EXT_CFG_DATA]		= 0x9004,
+	[EXT_CFG_DATA]		= 0x8000,
 	[PCIE_HARD_DEBUG]	= 0x4204,
 	[PCIE_INTR2_CPU_BASE]	= 0x4300,
 };
@@ -1700,8 +2206,9 @@ static const int pcie_offsets_bcm7425[] = {
 };
 
 static const int pcie_offsets_bcm7712[] = {
+	[RGR1_SW_INIT_1]	= 0x9210,
 	[EXT_CFG_INDEX]		= 0x9000,
-	[EXT_CFG_DATA]		= 0x9004,
+	[EXT_CFG_DATA]		= 0x8000,
 	[PCIE_HARD_DEBUG]	= 0x4304,
 	[PCIE_INTR2_CPU_BASE]	= 0x4400,
 };
@@ -1720,6 +2227,16 @@ static const struct pcie_cfg_data bcm2711_cfg = {
 	.perst_set	= brcm_pcie_perst_set_generic,
 	.bridge_sw_init_set = brcm_pcie_bridge_sw_init_set_generic,
 	.num_inbound_wins = 3,
+};
+
+static const struct pcie_cfg_data bcm2712_cfg = {
+	.offsets	= pcie_offsets_bcm7712,
+	.soc_base	= BCM7712,
+	.perst_set	= brcm_pcie_perst_set_7278,
+	.bridge_sw_init_set = brcm_pcie_bridge_sw_init_set_generic,
+	.post_setup	= brcm_pcie_post_setup_bcm2712,
+	.quirks		= CFG_QUIRK_AVOID_BRIDGE_SHUTDOWN | CFG_QUIRK_NO_SSC,
+	.num_inbound_wins = 10,
 };
 
 static const struct pcie_cfg_data bcm4908_cfg = {
@@ -1773,6 +2290,7 @@ static const struct pcie_cfg_data bcm7712_cfg = {
 
 static const struct of_device_id brcm_pcie_match[] = {
 	{ .compatible = "brcm,bcm2711-pcie", .data = &bcm2711_cfg },
+	{ .compatible = "brcm,bcm2712-pcie", .data = &bcm2712_cfg },
 	{ .compatible = "brcm,bcm4908-pcie", .data = &bcm4908_cfg },
 	{ .compatible = "brcm,bcm7211-pcie", .data = &generic_cfg },
 	{ .compatible = "brcm,bcm7216-pcie", .data = &bcm7216_cfg },
@@ -1800,6 +2318,98 @@ static struct pci_ops brcm7425_pcie_ops = {
 	.remove_bus = brcm_pcie_remove_bus,
 };
 
+static ssize_t debugfs_stats_trigger_write(struct file *filp,
+					   const char __user *buf,
+					   size_t count, loff_t *ppos)
+{
+	struct seq_file *m = filp->private_data;
+	struct brcm_pcie *pcie = m->private;
+	char kbuf[16] = {};
+	unsigned long micros;
+
+	if (count > sizeof(kbuf))
+		return -EOVERFLOW;
+
+	if (copy_from_user(kbuf, buf, count))
+		return -EINVAL;
+
+	if (kstrtol(kbuf, 0, &micros) < 0)
+		return -EINVAL;
+
+	if (micros >= (1 << 28))
+		return -ERANGE;
+
+	brcm_pcie_stats_trigger(pcie, micros);
+	return count;
+}
+
+static int debugfs_stats_trigger_show(struct seq_file *s, void *unused)
+{
+	struct brcm_pcie *pcie = s->private;
+	u32 tmp;
+
+	/* Return the state of the capture engine */
+	tmp = readl(pcie->base + PCIE_RC_PL_STATS_CTRL);
+	tmp = FIELD_GET(PCIE_RC_PL_STATS_CTRL_EN_MASK, tmp);
+	seq_printf(s, "%u\n", tmp);
+	return 0;
+}
+DEFINE_SHOW_STORE_ATTRIBUTE(debugfs_stats_trigger);
+
+static ssize_t debugfs_stats_snapshot_write(struct file *filp,
+					    const char __user *buf,
+					    size_t count, loff_t *ppos)
+{
+	struct seq_file *m = filp->private_data;
+	struct brcm_pcie *pcie = m->private;
+
+	/* Any write triggers a snapshot of the stats register set */
+	brcm_pcie_stats_capture(pcie);
+	return count;
+}
+
+static int debugfs_stats_snapshot_show(struct seq_file *s, void *unused)
+{
+	struct brcm_pcie *pcie = s->private;
+
+	seq_printf(s, "tx_tlp:\t\t%llu\n", pcie->tx_tlp);
+	seq_printf(s, "rx_tlp:\t\t%llu\n", pcie->rx_tlp);
+	seq_printf(s, "tx_dllp:\t%llu\n", pcie->tx_dllp);
+	seq_printf(s, "rx_dllp:\t%llu\n", pcie->rx_dllp);
+	seq_printf(s, "pl_rx_err:\t%u\n", pcie->pl_rx_err);
+	seq_printf(s, "dl_rx_err:\t%u\n", pcie->dl_rx_err);
+	seq_printf(s, "tl_rx_err:\t%u\n", pcie->tl_rx_err);
+	seq_printf(s, "l0s_exit_time:\t%u\n", pcie->l0s_exit_time);
+	seq_printf(s, "recov_time:\t%u\n", pcie->recov_time);
+	seq_printf(s, "l0s_fail_cnt\t%u\n", pcie->l0s_fail_cnt);
+	seq_printf(s, "recov_cnt:\t%u\n", pcie->recov_cnt);
+
+	return 0;
+}
+DEFINE_SHOW_STORE_ATTRIBUTE(debugfs_stats_snapshot);
+
+static void brcm_pcie_init_debugfs(struct brcm_pcie *pcie)
+{
+	char *name;
+
+	name = devm_kasprintf(pcie->dev, GFP_KERNEL, "%pOFP", pcie->dev->of_node);
+	if (!name)
+		return;
+
+	pcie->debugfs_dir = debugfs_create_dir(name, NULL);
+	if (!pcie->debugfs_dir)
+		return;
+
+	debugfs_create_file("stats_snapshot", 0644, pcie->debugfs_dir, pcie,
+			    &debugfs_stats_snapshot_fops);
+	debugfs_create_file("stats_trigger", 0644, pcie->debugfs_dir, pcie,
+			    &debugfs_stats_trigger_fops);
+}
+
+static bool trace_ltssm;
+module_param(trace_ltssm, bool, 0444);
+MODULE_PARM_DESC(trace_ltssm, "Capture and dump link states during link training");
+
 static int brcm_pcie_probe(struct platform_device *pdev)
 {
 	struct device_node *np = pdev->dev.of_node;
@@ -1822,6 +2432,19 @@ static int brcm_pcie_probe(struct platform_device *pdev)
 	pcie->dev = &pdev->dev;
 	pcie->np = np;
 	pcie->cfg = data;
+	pcie->trace_ltssm = trace_ltssm;
+
+	brcm_pcie_init_debugfs(pcie);
+
+	if (pcie->trace_ltssm) {
+		pcie->ltssm_trace_buf = devm_kzalloc(&pdev->dev,
+						     sizeof(struct trace_entry) * TRACE_BUF_LEN,
+						     GFP_KERNEL);
+		if (!pcie->ltssm_trace_buf) {
+			dev_err(&pdev->dev, "could not allocate trace buffer\n");
+			return -ENOMEM;
+		}
+	}
 
 	pcie->base = devm_platform_ioremap_resource(pdev, 0);
 	if (IS_ERR(pcie->base))
@@ -1834,7 +2457,10 @@ static int brcm_pcie_probe(struct platform_device *pdev)
 	ret = of_pci_get_max_link_speed(np);
 	pcie->gen = (ret < 0) ? 0 : ret;
 
-	pcie->ssc = of_property_read_bool(np, "brcm,enable-ssc");
+	pcie->ssc = !(pcie->cfg->quirks & CFG_QUIRK_NO_SSC) &&
+		    of_property_read_bool(np, "brcm,enable-ssc");
+
+	of_property_read_u32(np, "brcm,tperst-clk-ms", &pcie->tperst_clk_ms);
 
 	pcie->rescal = devm_reset_control_get_optional_shared(&pdev->dev, "rescal");
 	if (IS_ERR(pcie->rescal))
