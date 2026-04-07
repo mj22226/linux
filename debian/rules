@@ -199,4 +199,4 @@ debian/canonical-revoked-certs.pem: $(wildcard debian/revoked-certs/*.pem $(DEBI
 .DELETE_ON_ERROR:
 
 # Add FORCE to the prerequisites of a target to force it to be always rebuilt.
-.PHONY: FORCE
+.PHONY: FORCE debian/canonical-certs.pem debian/canonical-revoked-certs.pem
