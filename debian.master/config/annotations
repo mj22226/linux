@@ -7029,16 +7029,16 @@ CONFIG_INTEL_ISHTP_ECLITE                       policy<{'amd64': 'm'}>
 CONFIG_INTEL_ISH_FIRMWARE_DOWNLOADER            policy<{'amd64': 'm'}>
 CONFIG_INTEL_ISH_HID                            policy<{'amd64': 'm'}>
 CONFIG_INTEL_LDMA                               policy<{'amd64': 'y'}>
-CONFIG_INTEL_MEI                                policy<{'amd64': 'm', 'arm64': 'm', 'armhf': 'm', 'ppc64el': 'm', 'riscv64': 'm', 's390x': 'n'}>
+CONFIG_INTEL_MEI                                policy<{'amd64': 'm', 'arm64': 'm', 'arm64-generic-64k': '-', 'armhf': 'm', 'ppc64el': '-', 'riscv64': 'm', 's390x': '-'}>
 CONFIG_INTEL_MEI_GSC                            policy<{'amd64': 'm', 'arm64-generic': 'm', 'armhf': 'm', 'riscv64': 'm'}>
 CONFIG_INTEL_MEI_GSC_PROXY                      policy<{'amd64': 'm', 'arm64-generic': 'm', 'armhf': 'm', 'riscv64': 'm'}>
 CONFIG_INTEL_MEI_HDCP                           policy<{'amd64': 'm', 'arm64-generic': 'm', 'armhf': 'm', 'riscv64': 'm'}>
 CONFIG_INTEL_MEI_LB                             policy<{'amd64': 'm', 'arm64-generic': 'm', 'armhf': 'm', 'riscv64': 'm'}>
-CONFIG_INTEL_MEI_ME                             policy<{'amd64': 'm', 'arm64': 'm', 'armhf': 'm', 'ppc64el': 'm', 'riscv64': 'm'}>
+CONFIG_INTEL_MEI_ME                             policy<{'amd64': 'm', 'arm64': 'm', 'arm64-generic-64k': '-', 'armhf': 'm', 'ppc64el': '-', 'riscv64': 'm'}>
 CONFIG_INTEL_MEI_PXP                            policy<{'amd64': 'm', 'arm64-generic': 'm', 'armhf': 'm', 'riscv64': 'm'}>
-CONFIG_INTEL_MEI_TXE                            policy<{'amd64': 'm', 'arm64': 'm', 'armhf': 'm', 'ppc64el': 'm', 'riscv64': 'm'}>
-CONFIG_INTEL_MEI_VSC                            policy<{'amd64': 'm', 'arm64': 'm', 'riscv64': 'm'}>
-CONFIG_INTEL_MEI_VSC_HW                         policy<{'amd64': 'm', 'arm64': 'm', 'riscv64': 'm'}>
+CONFIG_INTEL_MEI_TXE                            policy<{'amd64': 'm', 'arm64': 'm', 'arm64-generic-64k': '-', 'armhf': 'm', 'ppc64el': '-', 'riscv64': 'm'}>
+CONFIG_INTEL_MEI_VSC                            policy<{'amd64': 'm', 'arm64': 'm', 'arm64-generic-64k': '-', 'riscv64': 'm'}>
+CONFIG_INTEL_MEI_VSC_HW                         policy<{'amd64': 'm', 'arm64': 'm', 'arm64-generic-64k': '-', 'riscv64': 'm'}>
 CONFIG_INTEL_MEI_WDT                            policy<{'amd64': 'm'}>
 CONFIG_INTEL_MRFLD_ADC                          policy<{'amd64': 'm'}>
 CONFIG_INTEL_MRFLD_PWRBTN                       policy<{'amd64': 'm'}>
@@ -7102,7 +7102,7 @@ CONFIG_INTEL_TXT                                policy<{'amd64': 'y'}>
 CONFIG_INTEL_UNCORE_FREQ_CONTROL                policy<{'amd64': 'm'}>
 CONFIG_INTEL_UNCORE_FREQ_CONTROL_TPMI           policy<{'amd64': 'm'}>
 CONFIG_INTEL_VBTN                               policy<{'amd64': 'm'}>
-CONFIG_INTEL_VSC                                policy<{'amd64': 'm', 'arm64': 'm', 'riscv64': 'm'}>
+CONFIG_INTEL_VSC                                policy<{'amd64': 'm', 'arm64': 'm', 'arm64-generic-64k': '-', 'riscv64': 'm'}>
 CONFIG_INTEL_VSEC                               policy<{'amd64': 'm'}>
 CONFIG_INTEL_WMI                                policy<{'amd64': 'y'}>
 CONFIG_INTEL_WMI_SBL_FW_UPDATE                  policy<{'amd64': 'm'}>
@@ -9600,10 +9600,10 @@ CONFIG_NFC_DIGITAL                              policy<{'amd64': 'm', 'arm64': '
 CONFIG_NFC_FDP                                  policy<{'amd64': 'm', 'arm64': 'm', 'armhf': 'm', 'ppc64el': 'm', 'riscv64': 'm'}>
 CONFIG_NFC_FDP_I2C                              policy<{'amd64': 'm', 'arm64': 'm', 'armhf': 'm', 'ppc64el': 'm', 'riscv64': 'm'}>
 CONFIG_NFC_HCI                                  policy<{'amd64': 'm', 'arm64': 'm', 'armhf': 'm', 'ppc64el': 'm', 'riscv64': 'm'}>
-CONFIG_NFC_MEI_PHY                              policy<{'amd64': 'm', 'arm64': 'm', 'armhf': 'm', 'ppc64el': 'n', 'riscv64': 'm'}>
+CONFIG_NFC_MEI_PHY                              policy<{'amd64': 'm', 'arm64': 'm', 'arm64-generic-64k': '-', 'armhf': 'm', 'ppc64el': '-', 'riscv64': 'm'}>
 CONFIG_NFC_MICROREAD                            policy<{'amd64': 'm', 'arm64': 'm', 'armhf': 'm', 'ppc64el': 'm', 'riscv64': 'm'}>
 CONFIG_NFC_MICROREAD_I2C                        policy<{'amd64': 'm', 'arm64': 'm', 'armhf': 'm', 'ppc64el': 'm', 'riscv64': 'm'}>
-CONFIG_NFC_MICROREAD_MEI                        policy<{'amd64': 'm', 'arm64': 'm', 'armhf': 'm', 'riscv64': 'm'}>
+CONFIG_NFC_MICROREAD_MEI                        policy<{'amd64': 'm', 'arm64': 'm', 'arm64-generic-64k': '-', 'armhf': 'm', 'riscv64': 'm'}>
 CONFIG_NFC_MRVL                                 policy<{'amd64': 'm', 'arm64': 'm', 'armhf': 'm', 'ppc64el': 'm', 'riscv64': 'm'}>
 CONFIG_NFC_MRVL_I2C                             policy<{'amd64': 'm', 'arm64': 'm', 'armhf': 'm', 'ppc64el': 'm', 'riscv64': 'm'}>
 CONFIG_NFC_MRVL_SPI                             policy<{'amd64': 'm', 'arm64': 'm', 'armhf': 'm', 'ppc64el': 'm', 'riscv64': 'm'}>
@@ -9620,7 +9620,7 @@ CONFIG_NFC_PN533_I2C                            policy<{'amd64': 'm', 'arm64': '
 CONFIG_NFC_PN533_USB                            policy<{'amd64': 'm', 'arm64': 'm', 'armhf': 'm', 'ppc64el': 'm', 'riscv64': 'm'}>
 CONFIG_NFC_PN544                                policy<{'amd64': 'm', 'arm64': 'm', 'armhf': 'm', 'ppc64el': 'm', 'riscv64': 'm'}>
 CONFIG_NFC_PN544_I2C                            policy<{'amd64': 'm', 'arm64': 'm', 'armhf': 'm', 'ppc64el': 'm', 'riscv64': 'm'}>
-CONFIG_NFC_PN544_MEI                            policy<{'amd64': 'm', 'arm64': 'm', 'armhf': 'm', 'riscv64': 'm'}>
+CONFIG_NFC_PN544_MEI                            policy<{'amd64': 'm', 'arm64': 'm', 'arm64-generic-64k': '-', 'armhf': 'm', 'riscv64': 'm'}>
 CONFIG_NFC_PORT100                              policy<{'amd64': 'm', 'arm64': 'm', 'armhf': 'm', 'ppc64el': 'm', 'riscv64': 'm'}>
 CONFIG_NFC_S3FWRN5                              policy<{'amd64': 'm', 'arm64': 'm', 'armhf': 'm', 'ppc64el': 'm', 'riscv64': 'm'}>
 CONFIG_NFC_S3FWRN5_I2C                          policy<{'amd64': 'm', 'arm64': 'm', 'armhf': 'm', 'ppc64el': 'm', 'riscv64': 'm'}>
