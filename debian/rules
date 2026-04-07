@@ -158,7 +158,7 @@ include debian/rules.d/2-binary-arch.mk
 include debian/rules.d/3-binary-indep.mk
 
 # Calculate Ubuntu Compatible Signing levels
-UBUNTU_COMPATIBLE_SIGNING=$(shell grep -qx ' *Subject: C = GB, ST = Isle of Man, O = Canonical Ltd., OU = Secure Boot, CN = Canonical Ltd. Secure Boot Signing (2021 v3)' debian/canonical-revoked-certs.pem && echo ubuntu/4 pro/3)
+UBUNTU_COMPATIBLE_SIGNING=$(shell /bin/sh debian/scripts/ubuntu-compatible-signing)
 
 # Misc stuff
 debian/control: debian/canonical-revoked-certs.pem $(DEBIAN)/changelog FORCE
