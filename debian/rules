@@ -161,7 +161,7 @@ include debian/rules.d/3-binary-indep.mk
 UBUNTU_COMPATIBLE_SIGNING=$(shell /bin/sh debian/scripts/ubuntu-compatible-signing)
 
 # Misc stuff
-debian/control: debian/canonical-revoked-certs.pem $(DEBIAN)/changelog FORCE
+debian/control: debian/canonical-revoked-certs.pem debian/canonical-certs.pem $(DEBIAN)/changelog FORCE
 	$(SHELL) debian/scripts/control-create $(DEB_SOURCE) > $@
 	sed -i -e 's/PKGVER/$(DEB_VERSION_UPSTREAM)/g'                          \
 	        -e 's/ABINUM/$(abinum)/g'                                       \
