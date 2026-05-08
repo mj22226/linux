@@ -36,4 +36,8 @@ arm/fixes
 		ARM: realtek: MAINTAINERS: Include pin controller drivers
 	ffa/fixes-2
 		git://git.kernel.org/pub/scm/linux/kernel/git/sudeep.holla/linux tags/ffa-fixes-7.1-2
+	patch
+		firmware: psci: Set pm_set_resume/suspend_via_firmware() for SYSTEM_SUSPEND
+	riscv/dt-fixes
+		https://git.kernel.org/pub/scm/linux/kernel/git/conor/linux tags/riscv-dt-fixes-for-v7.1-rc3
 
