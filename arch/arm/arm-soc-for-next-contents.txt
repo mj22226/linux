@@ -1,13 +1,23 @@
 soc/arm
 	patch
 		ARM: select legacy gpiolib interfaces where used
+		arm64: Kconfig: drop unneeded dependency on OF_GPIO for ARCH_MVEBU
 
 soc/dt
 	patch
 		arm64: dts: realtek: Add pinctrl support for RTD1625
 		ARM: dts: ixp4xx: use phandle-based GPIOs in mi424wr
+	pxa1908/dt
+		https://codeberg.org/pxa1908-mainline/linux tags/pxa1908-dt-for-7.2
+	renesas/dt
+		git://git.kernel.org/pub/scm/linux/kernel/git/geert/renesas-devel tags/renesas-dts-for-v7.2-tag1
+		contains renesas/fixes-1
 
 soc/drivers
+	fsl/soc-driver
+		https://git.kernel.org/pub/scm/linux/kernel/git/chleroy/linux tags/soc_fsl-7.1-2
+	renesas/drivers
+		git://git.kernel.org/pub/scm/linux/kernel/git/geert/renesas-devel tags/renesas-drivers-for-v7.2-tag1
 
 soc/defconfig
 	patch
@@ -24,6 +34,7 @@ soc/defconfig
 		ARM: configs: Drop redundant SND_ATMEL_SOC
 		ARM: multi_v7_defconfig: Cleanup redundant options
 		ARM: multi_v7_defconfig: Correct QCOM_RPMH and QCOM_RPMHPD
+		arm64: defconfig: Enable PCI M.2 power sequencing driver
 
 soc/late
 
