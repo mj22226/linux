@@ -2,6 +2,10 @@ soc/arm
 	patch
 		ARM: select legacy gpiolib interfaces where used
 		arm64: Kconfig: drop unneeded dependency on OF_GPIO for ARCH_MVEBU
+	pxa/gpio
+		git://git.kernel.org/pub/scm/linux/kernel/git/brgl/linux tags/soc-pxa-gpio-for-v7.2
+	zx/soc
+		https://gitlab.com/stefandoesinger/zx297520-kernel tags/zx29-plat-for-7.2
 
 soc/dt
 	patch
@@ -12,6 +16,8 @@ soc/dt
 	renesas/dt
 		git://git.kernel.org/pub/scm/linux/kernel/git/geert/renesas-devel tags/renesas-dts-for-v7.2-tag1
 		contains renesas/fixes-1
+	xz/dt
+		https://gitlab.com/stefandoesinger/zx297520-kernel tags/zx29-dts-for-7.2
 
 soc/drivers
 	fsl/soc-driver
@@ -35,6 +41,8 @@ soc/defconfig
 		ARM: multi_v7_defconfig: Cleanup redundant options
 		ARM: multi_v7_defconfig: Correct QCOM_RPMH and QCOM_RPMHPD
 		arm64: defconfig: Enable PCI M.2 power sequencing driver
+	cix/defconfig
+		git://git.kernel.org/pub/scm/linux/kernel/git/peter.chen/cix tags/cix-defconfig-v7.2-rc1
 
 soc/late
 
