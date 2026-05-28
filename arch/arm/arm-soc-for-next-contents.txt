@@ -47,16 +47,21 @@ soc/defconfig
 soc/late
 
 arm/fixes
-	renesas/fixes-1
-		git://git.kernel.org/pub/scm/linux/kernel/git/geert/renesas-devel tags/renesas-fixes-for-v7.1-tag1
+	tee/fixes
+		git://git.kernel.org/pub/scm/linux/kernel/git/jenswi/linux-tee tags/tee-fixes-for-v7.1
+	optee/fix
+		git://git.kernel.org/pub/scm/linux/kernel/git/jenswi/linux-tee tags/optee-fix-for-v7.1
+	<no branch> (471c18323dfdfe7844e193b896a9267ae23a1026)
+		git://git.kernel.org/pub/scm/linux/kernel/git/jenswi/linux-tee tags/qcomtee-fix-for-v7.1
+	qcom/fixes
+		https://git.kernel.org/pub/scm/linux/kernel/git/qcom/linux tags/qcom-drivers-fixes-for-7.1
+	qcom/dt-fixes
+		https://git.kernel.org/pub/scm/linux/kernel/git/qcom/linux tags/qcom-arm64-fixes-for-7.1
+	<no branch> (b73953af9bbd5c721c9d92b805a8aea8b0db74b1)
+		https://git.kernel.org/pub/scm/linux/kernel/git/qcom/linux tags/qcom-arm64-defconfig-fixes-for-7.1
 	patch
-		ARM: integrator: Fix early initialization
-		MAINTAINERS: Add maintainers for ARM/REALTEK ARCHITECTURE
-		ARM: realtek: MAINTAINERS: Include pin controller drivers
-	ffa/fixes-2
-		git://git.kernel.org/pub/scm/linux/kernel/git/sudeep.holla/linux tags/ffa-fixes-7.1-2
-	patch
-		firmware: psci: Set pm_set_resume/suspend_via_firmware() for SYSTEM_SUSPEND
-	riscv/dt-fixes
-		https://git.kernel.org/pub/scm/linux/kernel/git/conor/linux tags/riscv-dt-fixes-for-v7.1-rc3
+		ARM: dts: gemini: Fix partition offsets
+	imx/fixes
+imx/fixes-2
+		git://git.kernel.org/pub/scm/linux/kernel/git/frank.li/linux tags/imx-soc-fixes-for-v7.1
 
