@@ -6,6 +6,7 @@ soc/arm
 		git://git.kernel.org/pub/scm/linux/kernel/git/brgl/linux tags/soc-pxa-gpio-for-v7.2
 	zx/soc
 		https://gitlab.com/stefandoesinger/zx297520-kernel tags/zx29-plat-for-7.2
+		https://gitlab.com/stefandoesinger/zx297520-kernel.git tags/zx29-docfix-for-7.2
 
 soc/dt
 	patch
