@@ -22,6 +22,9 @@ soc/dt
 	renesas/dt
 		git://git.kernel.org/pub/scm/linux/kernel/git/geert/renesas-devel tags/renesas-dts-for-v7.2-tag1
 		contains renesas/fixes-1
+	rockchip/dt
+		https://git.kernel.org/pub/scm/linux/kernel/git/mmind/linux-rockchip.git tags/v7.2-rockchip-dts32
+		https://git.kernel.org/pub/scm/linux/kernel/git/mmind/linux-rockchip.git tags/v7.2-rockchip-dts64-1
 	xz/dt
 		https://gitlab.com/stefandoesinger/zx297520-kernel tags/zx29-dts-for-7.2
 	<no branch> (89d0ad7f3a60d3076da2d90ece8d78d0eb60bb91)
