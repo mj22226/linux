@@ -4,6 +4,8 @@ soc/arm
 		arm64: Kconfig: drop unneeded dependency on OF_GPIO for ARCH_MVEBU
 	pxa/gpio
 		git://git.kernel.org/pub/scm/linux/kernel/git/brgl/linux tags/soc-pxa-gpio-for-v7.2
+	samsung/soc
+		https://git.kernel.org/pub/scm/linux/kernel/git/krzk/linux.git tags/samsung-soc-7.2
 	zx/soc
 		https://gitlab.com/stefandoesinger/zx297520-kernel tags/zx29-plat-for-7.2
 	xz29/docfix
