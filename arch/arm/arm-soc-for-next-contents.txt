@@ -15,6 +15,8 @@ soc/dt
 	patch
 		arm64: dts: realtek: Add pinctrl support for RTD1625
 		ARM: dts: ixp4xx: use phandle-based GPIOs in mi424wr
+	ixp4xx/dt
+		git://git.kernel.org/pub/scm/linux/kernel/git/linusw/linux-integrator.git tags/gemini-for-v7.2
 	pxa1908/dt
 		https://codeberg.org/pxa1908-mainline/linux tags/pxa1908-dt-for-7.2
 	qcom/dt
