@@ -57,6 +57,8 @@ soc/drivers
 		git://git.kernel.org/pub/scm/linux/kernel/git/jenswi/linux-tee tags/amdtee-for-v7.2
 	firmware/optee
 		git://git.kernel.org/pub/scm/linux/kernel/git/jenswi/linux-tee tags/optee-for-v7.2
+	firmware/xilinx
+		https://github.com/Xilinx/linux-xlnx.git tags/zynqmp-soc-for-7.2
 
 soc/defconfig
 	patch
