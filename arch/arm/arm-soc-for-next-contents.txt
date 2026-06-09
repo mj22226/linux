@@ -4,44 +4,50 @@ soc/arm
 		arm64: Kconfig: drop unneeded dependency on OF_GPIO for ARCH_MVEBU
 	pxa/gpio
 		git://git.kernel.org/pub/scm/linux/kernel/git/brgl/linux tags/soc-pxa-gpio-for-v7.2
-	samsung/soc
-		https://git.kernel.org/pub/scm/linux/kernel/git/krzk/linux.git tags/samsung-soc-7.2
 	zx/soc
 		https://gitlab.com/stefandoesinger/zx297520-kernel tags/zx29-plat-for-7.2
 	xz29/docfix
 		https://gitlab.com/stefandoesinger/zx297520-kernel tags/zx29-docfix-for-7.2
 	ep93xx/arm
 		https://git.kernel.org/pub/scm/linux/kernel/git/asv/linux tags/ep93xx-20260529
+	tags/samsung-soc-7.2
+		https://git.kernel.org/pub/scm/linux/kernel/git/krzk/linux tags/samsung-soc-7.2
+	imx/soc
+		git://git.kernel.org/pub/scm/linux/kernel/git/frank.li/linux tags/imx-soc-updates-for-v7.2
+	omap/soc
+		git://git.kernel.org/pub/scm/linux/kernel/git/khilman/linux-omap tags/omap-for-v7.2/soc-signed
 
 soc/dt
 	patch
 		arm64: dts: realtek: Add pinctrl support for RTD1625
 		ARM: dts: ixp4xx: use phandle-based GPIOs in mi424wr
-	ixp4xx/dt
-		git://git.kernel.org/pub/scm/linux/kernel/git/linusw/linux-integrator.git tags/gemini-for-v7.2
 	pxa1908/dt
 		https://codeberg.org/pxa1908-mainline/linux tags/pxa1908-dt-for-7.2
-	qcom/dt
-		https://git.kernel.org/pub/scm/linux/kernel/git/qcom/linux.git tags/qcom-arm64-for-7.2
 	renesas/dt
 		git://git.kernel.org/pub/scm/linux/kernel/git/geert/renesas-devel tags/renesas-dts-for-v7.2-tag1
 		contains renesas/fixes-1
-	rockchip/dt
-		https://git.kernel.org/pub/scm/linux/kernel/git/mmind/linux-rockchip.git tags/v7.2-rockchip-dts32
-		https://git.kernel.org/pub/scm/linux/kernel/git/mmind/linux-rockchip.git tags/v7.2-rockchip-dts64-1
-	samsung/dt
-		https://git.kernel.org/pub/scm/linux/kernel/git/krzk/linux.git tags/samsung-dt64-7.2
-	socfpga/dt
-		git://git.kernel.org/pub/scm/linux/kernel/git/dinguyen/linux.git tags/socfpga_dts_updates_for_v7.2
-	stm32/dt
-		git://git.kernel.org/pub/scm/linux/kernel/git/atorgue/stm32.git tags/stm32-dt-for-7.2-1
-	tegra/dt
-		git://git.kernel.org/pub/scm/linux/kernel/git/tegra/linux.git tags/tegra-for-7.2-dt-bindings
-		git://git.kernel.org/pub/scm/linux/kernel/git/tegra/linux.git tags/tegra-for-7.2-arm-dt
 	xz/dt
 		https://gitlab.com/stefandoesinger/zx297520-kernel tags/zx29-dts-for-7.2
-	<no branch> (89d0ad7f3a60d3076da2d90ece8d78d0eb60bb91)
+	cix/dt
 		git://git.kernel.org/pub/scm/linux/kernel/git/peter.chen/cix tags/cix-dt-v7.2-rc1
+	qcom/dt
+		https://git.kernel.org/pub/scm/linux/kernel/git/qcom/linux tags/qcom-arm64-for-7.2
+	rockchip/dt
+		https://git.kernel.org/pub/scm/linux/kernel/git/mmind/linux-rockchip tags/v7.2-rockchip-dts32
+	qcom/dt64
+		https://git.kernel.org/pub/scm/linux/kernel/git/mmind/linux-rockchip tags/v7.2-rockchip-dts64-1
+	gemini/dt
+		git://git.kernel.org/pub/scm/linux/kernel/git/linusw/linux-integrator tags/gemini-for-v7.2
+	tegra/dt-bindings
+		git://git.kernel.org/pub/scm/linux/kernel/git/tegra/linux tags/tegra-for-7.2-dt-bindings
+	tegra/dt
+		git://git.kernel.org/pub/scm/linux/kernel/git/tegra/linux tags/tegra-for-7.2-arm-dt
+	exynos/dt
+		https://git.kernel.org/pub/scm/linux/kernel/git/krzk/linux tags/samsung-dt64-7.2
+	stm32/dt
+		git://git.kernel.org/pub/scm/linux/kernel/git/atorgue/stm32 tags/stm32-dt-for-7.2-1
+	socfpga/dt
+		git://git.kernel.org/pub/scm/linux/kernel/git/dinguyen/linux tags/socfpga_dts_updates_for_v7.2
 
 soc/drivers
 	fsl/soc-driver
@@ -60,7 +66,7 @@ soc/drivers
 	firmware/optee
 		git://git.kernel.org/pub/scm/linux/kernel/git/jenswi/linux-tee tags/optee-for-v7.2
 	firmware/xilinx
-		https://github.com/Xilinx/linux-xlnx.git tags/zynqmp-soc-for-7.2
+		https://github.com/Xilinx/linux-xlnx tags/zynqmp-soc-for-7.2
 
 soc/defconfig
 	patch
@@ -80,32 +86,19 @@ soc/defconfig
 		arm64: defconfig: Enable PCI M.2 power sequencing driver
 	cix/defconfig
 		git://git.kernel.org/pub/scm/linux/kernel/git/peter.chen/cix tags/cix-defconfig-v7.2-rc1
+	patch
+		ARM: configs: Drop duplicated CONFIG_EXT4_FS
+		ARM: multi_v7_defconfig: Enable dma-buf heaps
+	at91/defconfig
+		https://git.kernel.org/pub/scm/linux/kernel/git/at91/linux tags/at91-defconfig-7.2
+	imx/defconfig
+		git://git.kernel.org/pub/scm/linux/kernel/git/frank.li/linux tags/imx-defconfig-7.2
 
 soc/late
 
 arm/fixes
-	tee/fixes
-		git://git.kernel.org/pub/scm/linux/kernel/git/jenswi/linux-tee tags/tee-fixes-for-v7.1
-	optee/fix
-		git://git.kernel.org/pub/scm/linux/kernel/git/jenswi/linux-tee tags/optee-fix-for-v7.1
-	<no branch> (471c18323dfdfe7844e193b896a9267ae23a1026)
-		git://git.kernel.org/pub/scm/linux/kernel/git/jenswi/linux-tee tags/qcomtee-fix-for-v7.1
-	qcom/fixes
-		https://git.kernel.org/pub/scm/linux/kernel/git/qcom/linux tags/qcom-drivers-fixes-for-7.1
-	qcom/dt-fixes
-		https://git.kernel.org/pub/scm/linux/kernel/git/qcom/linux tags/qcom-arm64-fixes-for-7.1
-	<no branch> (b73953af9bbd5c721c9d92b805a8aea8b0db74b1)
-		https://git.kernel.org/pub/scm/linux/kernel/git/qcom/linux tags/qcom-arm64-defconfig-fixes-for-7.1
-	patch
-		ARM: dts: gemini: Fix partition offsets
-	imx/fixes
-		git://git.kernel.org/pub/scm/linux/kernel/git/frank.li/linux tags/imx-soc-fixes-for-v7.1
-	samsung/fixes
-		https://git.kernel.org/pub/scm/linux/kernel/git/krzk/linux tags/samsung-drivers-fixes-7.1-2
-	memory/fixes
-		https://git.kernel.org/pub/scm/linux/kernel/git/krzk/linux-mem-ctrl tags/memory-controller-drv-fixes-7.1
-	<no branch> (765aaba18413a66f6c8fe8416336ca9b3dd98a79)
-		https://git.kernel.org/pub/scm/linux/kernel/git/at91/linux tags/at91-fixes-7.1
-	<no branch> (63838c323924fe4a78b2323bd45aa1030f72ca60)
-		git://git.kernel.org/pub/scm/linux/kernel/git/dinguyen/linux tags/socfpga_fix_for_v7.1
+	<no branch> (75ef233975589d9a8c88bc8822a7c725c71ff650)
+		https://git.kernel.org/pub/scm/linux/kernel/git/conor/linux tags/riscv-soc-fixes-for-v7.1-rc7
+	<no branch> (6fc5666aa576c6c3bec256fa31d72653210319d5)
+		https://git.kernel.org/pub/scm/linux/kernel/git/mmind/linux-rockchip tags/v7.1-rockchip-arm32fixe
 
