@@ -95,6 +95,26 @@ soc/drivers
 		ssh://gitolite.kernel.org/pub/scm/linux/kernel/git/sunxi/linux tags/sunxi-drivers-for-7.2
 	aspeed/drivers
 		ssh://gitolite.kernel.org/pub/scm/linux/kernel/git/bmc/linux tags/aspeed-7.2-drivers-0
+	tegra/soc
+		git://git.kernel.org/pub/scm/linux/kernel/git/tegra/linux tags/tegra-for-7.2-soc
+	tegra/pmc
+		git://git.kernel.org/pub/scm/linux/kernel/git/tegra/linux tags/tegra-for-7.2-pmc
+	tegra/firmware
+		git://git.kernel.org/pub/scm/linux/kernel/git/tegra/linux tags/tegra-for-7.2-firmware
+	samsung/drivers
+		https://git.kernel.org/pub/scm/linux/kernel/git/krzk/linux tags/samsung-drivers-7.2
+		contains samsung/fixes
+	drivers/memory
+		https://git.kernel.org/pub/scm/linux/kernel/git/krzk/linux-mem-ctrl tags/memory-controller-drv-7.2
+		contains memory/fixes
+	broadcom/drivers
+		https://github.com/Broadcom/stblinux tags/arm-soc/for-7.2/drivers
+	ti/k3-drivers
+		https://git.kernel.org/pub/scm/linux/kernel/git/ti/linux tags/ti-driver-soc-for-v7.2
+	drivers/cache
+		https://git.kernel.org/pub/scm/linux/kernel/git/conor/linux tags/cache-for-v7.2
+	microchip/dt-bindings
+		https://git.kernel.org/pub/scm/linux/kernel/git/conor/linux tags/riscv-soc-drivers-for-v7.2
 
 soc/defconfig
 	patch
@@ -121,6 +141,8 @@ soc/defconfig
 		https://git.kernel.org/pub/scm/linux/kernel/git/at91/linux tags/at91-defconfig-7.2
 	imx/defconfig
 		git://git.kernel.org/pub/scm/linux/kernel/git/frank.li/linux tags/imx-defconfig-7.2
+	patch
+		arm64: configs: Update defconfig for AST2700 platform support
 
 soc/late
 
