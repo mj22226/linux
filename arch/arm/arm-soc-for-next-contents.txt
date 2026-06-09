@@ -16,6 +16,8 @@ soc/arm
 		git://git.kernel.org/pub/scm/linux/kernel/git/frank.li/linux tags/imx-soc-updates-for-v7.2
 	omap/soc
 		git://git.kernel.org/pub/scm/linux/kernel/git/khilman/linux-omap tags/omap-for-v7.2/soc-signed
+	mvebu/arm
+		git://git.kernel.org/pub/scm/linux/kernel/git/gclement/mvebu tags/mvebu-arm-7.2-1
 
 soc/dt
 	patch
@@ -88,6 +90,12 @@ soc/dt
 		dt-bindings: arm: aspeed: Add AST2700 board compatible
 		arm64: Kconfig: Add ASPEED SoC family Kconfig support
 		arm64: dts: aspeed: Add initial AST27xx SoC device tree
+	ti/omap-dt
+		git://git.kernel.org/pub/scm/linux/kernel/git/khilman/linux-omap tags/omap-for-v7.2/dt-signed
+	at91/dt
+		https://git.kernel.org/pub/scm/linux/kernel/git/at91/linux tags/at91-dt-7.2
+	microchip/dt64
+		https://git.kernel.org/pub/scm/linux/kernel/git/at91/linux tags/microchip-dt64-7.2
 
 soc/drivers
 	fsl/soc-driver
