@@ -18,6 +18,8 @@ soc/arm
 		git://git.kernel.org/pub/scm/linux/kernel/git/khilman/linux-omap tags/omap-for-v7.2/soc-signed
 	mvebu/arm
 		git://git.kernel.org/pub/scm/linux/kernel/git/gclement/mvebu tags/mvebu-arm-7.2-1
+	patch
+		ARM: remove the last few uses of do_bad_IRQ()
 
 soc/dt
 	patch
@@ -96,6 +98,10 @@ soc/dt
 		https://git.kernel.org/pub/scm/linux/kernel/git/at91/linux tags/at91-dt-7.2
 	microchip/dt64
 		https://git.kernel.org/pub/scm/linux/kernel/git/at91/linux tags/microchip-dt64-7.2
+	imx/dt64
+		git://git.kernel.org/pub/scm/linux/kernel/git/frank.li/linux tags/imx-dt64-7.2
+	imx/dt64-2
+		git://git.kernel.org/pub/scm/linux/kernel/git/frank.li/linux tags/imx-dt64-7.2-part2
 
 soc/drivers
 	fsl/soc-driver
