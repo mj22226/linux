@@ -20,6 +20,7 @@ soc/arm
 		git://git.kernel.org/pub/scm/linux/kernel/git/gclement/mvebu tags/mvebu-arm-7.2-1
 	patch
 		ARM: remove the last few uses of do_bad_IRQ()
+		MAINTAINERS: Add Axiado reviewer and Maintainers
 
 soc/dt
 	patch
@@ -102,6 +103,10 @@ soc/dt
 		git://git.kernel.org/pub/scm/linux/kernel/git/frank.li/linux tags/imx-dt64-7.2
 	imx/dt64-2
 		git://git.kernel.org/pub/scm/linux/kernel/git/frank.li/linux tags/imx-dt64-7.2-part2
+	imx/dt-binding
+		git://git.kernel.org/pub/scm/linux/kernel/git/frank.li/linux tags/imx-binding-7.2
+	sunxi/dt-2
+		https://git.kernel.org/pub/scm/linux/kernel/git/sunxi/linux tags/sunxi-dt-for-7.2-2
 
 soc/drivers
 	fsl/soc-driver
