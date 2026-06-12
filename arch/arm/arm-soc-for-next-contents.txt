@@ -107,6 +107,8 @@ soc/dt
 		git://git.kernel.org/pub/scm/linux/kernel/git/frank.li/linux tags/imx-binding-7.2
 	sunxi/dt-2
 		https://git.kernel.org/pub/scm/linux/kernel/git/sunxi/linux tags/sunxi-dt-for-7.2-2
+	bst/dt
+		https://github.com/BlackSesame-SoC/linux tags/bst-arm64-emmc-driver-dts-for-v7.2
 
 soc/drivers
 	fsl/soc-driver
@@ -182,6 +184,8 @@ soc/defconfig
 		git://git.kernel.org/pub/scm/linux/kernel/git/frank.li/linux tags/imx-defconfig-7.2
 	patch
 		arm64: configs: Update defconfig for AST2700 platform support
+	bst/defconfig
+		https://github.com/BlackSesame-SoC/linux tags/bst-arm64-emmc-driver-defconfig-for-v7.2
 
 soc/late
 
