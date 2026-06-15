@@ -109,6 +109,8 @@ soc/dt
 		https://git.kernel.org/pub/scm/linux/kernel/git/sunxi/linux tags/sunxi-dt-for-7.2-2
 	bst/dt
 		https://github.com/BlackSesame-SoC/linux tags/bst-arm64-emmc-driver-dts-for-v7.2
+	patch
+		arm64: dts: aspeed: Fix duplicate pinctrl labels and address scheme
 
 soc/drivers
 	fsl/soc-driver
@@ -156,6 +158,11 @@ soc/drivers
 		https://git.kernel.org/pub/scm/linux/kernel/git/conor/linux tags/cache-for-v7.2
 	microchip/dt-bindings
 		https://git.kernel.org/pub/scm/linux/kernel/git/conor/linux tags/riscv-soc-drivers-for-v7.2
+	patch
+		Revert "Documentation: ABI: add sysfs interface for ZynqMP CSU registers"
+		Revert "firmware: zynqmp: Add dynamic CSU register discovery and sysfs interface"
+	drivers/memory-2
+		https://git.kernel.org/pub/scm/linux/kernel/git/krzk/linux-mem-ctrl tags/memory-controller-drv-7.2-2
 
 soc/defconfig
 	patch
@@ -190,8 +197,4 @@ soc/defconfig
 soc/late
 
 arm/fixes
-	<no branch> (75ef233975589d9a8c88bc8822a7c725c71ff650)
-		https://git.kernel.org/pub/scm/linux/kernel/git/conor/linux tags/riscv-soc-fixes-for-v7.1-rc7
-	<no branch> (6fc5666aa576c6c3bec256fa31d72653210319d5)
-		https://git.kernel.org/pub/scm/linux/kernel/git/mmind/linux-rockchip tags/v7.1-rockchip-arm32fixe
 
