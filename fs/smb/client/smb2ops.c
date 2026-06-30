@@ -2246,10 +2246,10 @@ duplicate_extents_out:
 
 static int
 smb2_set_compression(const unsigned int xid, struct cifs_tcon *tcon,
-		   struct cifsFileInfo *cfile)
+		   struct cifsFileInfo *cfile, __u16 compression_state)
 {
 	return SMB2_set_compression(xid, tcon, cfile->fid.persistent_fid,
-			    cfile->fid.volatile_fid);
+			    cfile->fid.volatile_fid, compression_state);
 }
 
 static int
@@ -4359,11 +4359,13 @@ static void *smb2_aead_req_alloc(struct crypto_aead *tfm, const struct smb_rqst 
 	unsigned int req_size = sizeof(**req) + crypto_aead_reqsize(tfm);
 	unsigned int iv_size = crypto_aead_ivsize(tfm);
 	unsigned int len;
+	int ret;
 	u8 *p;
 
-	*num_sgs = cifs_get_num_sgs(rqst, num_rqst, sig);
-	if (IS_ERR_VALUE((long)(int)*num_sgs))
-		return ERR_PTR(*num_sgs);
+	ret = cifs_get_num_sgs(rqst, num_rqst, sig);
+	if (ret < 0)
+		return ERR_PTR(ret);
+	*num_sgs = ret;
 
 	len = iv_size;
 	len += crypto_aead_alignmask(tfm) & ~(crypto_tfm_ctx_alignment() - 1);
@@ -4706,9 +4708,15 @@ cifs_copy_folioq_to_iter(struct folio_queue *folioq, size_t data_size,
 {
 	for (; folioq; folioq = folioq->next) {
 		for (int s = 0; s < folioq_count(folioq); s++) {
-			struct folio *folio = folioq_folio(folioq, s);
-			size_t fsize = folio_size(folio);
-			size_t n, len = umin(fsize - skip, data_size);
+			struct folio *folio;
+			size_t fsize, n, len;
+
+			if (data_size == 0)
+				return 0;
+
+			folio = folioq_folio(folioq, s);
+			fsize = folio_size(folio);
+			len = umin(fsize - skip, data_size);
 
 			n = copy_folio_to_iter(folio, skip, len, iter);
 			if (n != len) {
@@ -4719,6 +4727,12 @@ cifs_copy_folioq_to_iter(struct folio_queue *folioq, size_t data_size,
 			data_size -= n;
 			skip = 0;
 		}
+	}
+
+	if (data_size != 0) {
+		cifs_dbg(VFS, "%s: short copy, %zu bytes missing\n",
+			 __func__, data_size);
+		return smb_EIO2(smb_eio_trace_rx_copy_to_iter, 0, data_size);
 	}
 
 	return 0;
