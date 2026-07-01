@@ -422,6 +422,9 @@ static int fastrpc_map_lookup(struct fastrpc_user *fl, int fd,
 
 static void fastrpc_buf_free(struct fastrpc_buf *buf)
 {
+	if (!buf)
+		return;
+
 	dma_free_coherent(buf->dev, buf->size, buf->virt,
 			  fastrpc_ipa_to_dma_addr(buf->fl->cctx, buf->dma_addr));
 	kfree(buf);
@@ -514,8 +517,7 @@ static void fastrpc_user_free(struct kref *ref)
 	struct fastrpc_map *map, *m;
 	struct fastrpc_buf *buf, *b;
 
-	if (fl->init_mem)
-		fastrpc_buf_free(fl->init_mem);
+	fastrpc_buf_free(fl->init_mem);
 
 	list_for_each_entry_safe(ctx, n, &fl->pending, node) {
 		list_del(&ctx->node);
@@ -560,8 +562,7 @@ static void fastrpc_context_free(struct kref *ref)
 	for (i = 0; i < ctx->nbufs; i++)
 		fastrpc_map_put(ctx->maps[i]);
 
-	if (ctx->buf)
-		fastrpc_buf_free(ctx->buf);
+	fastrpc_buf_free(ctx->buf);
 
 	spin_lock_irqsave(&cctx->lock, flags);
 	idr_remove(&cctx->ctx_idr, ctx->ctxid >> 4);
@@ -2231,19 +2232,22 @@ static int fastrpc_cb_probe(struct platform_device *pdev)
 	struct device *dev = &pdev->dev;
 	int i, sessions = 0;
 	unsigned long flags;
-	int rc;
 	u32 dma_bits;
+	u32 sid = 0;
+	int rc;
 
 	cctx = dev_get_drvdata(dev->parent);
 	if (!cctx)
 		return -EINVAL;
 
 	of_property_read_u32(dev->of_node, "qcom,nsessions", &sessions);
+	if (of_property_read_u32(dev->of_node, "reg", &sid))
+		dev_info(dev, "FastRPC Session ID not specified in DT\n");
 
 	spin_lock_irqsave(&cctx->lock, flags);
 	if (cctx->sesscount >= FASTRPC_MAX_SESSIONS) {
-		dev_err(&pdev->dev, "too many sessions\n");
 		spin_unlock_irqrestore(&cctx->lock, flags);
+		dev_err(&pdev->dev, "too many sessions\n");
 		return -ENOSPC;
 	}
 	dma_bits = cctx->soc_data->dma_addr_bits_default;
@@ -2252,12 +2256,10 @@ static int fastrpc_cb_probe(struct platform_device *pdev)
 	sess->valid = true;
 	sess->dev = dev;
 	dev_set_drvdata(dev, sess);
+	sess->sid = sid;
 
 	if (cctx->domain_id == CDSP_DOMAIN_ID)
 		dma_bits = cctx->soc_data->dma_addr_bits_cdsp;
-
-	if (of_property_read_u32(dev->of_node, "reg", &sess->sid))
-		dev_info(dev, "FastRPC Session ID not specified in DT\n");
 
 	if (sessions > 0) {
 		struct fastrpc_session_ctx *dup_sess;
