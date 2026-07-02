@@ -799,28 +799,6 @@ void __meminit init_deferred_page(unsigned long pfn, int nid)
 	__init_deferred_page(pfn, nid);
 }
 
-/* If zone is ZONE_MOVABLE but memory is mirrored, it is an overlapped init */
-static bool __meminit
-overlap_memmap_init(unsigned long zone, unsigned long *pfn)
-{
-	static struct memblock_region *r __meminitdata;
-
-	if (mirrored_kernelcore && zone == ZONE_MOVABLE) {
-		if (!r || *pfn >= memblock_region_memory_end_pfn(r)) {
-			for_each_mem_region(r) {
-				if (*pfn < memblock_region_memory_end_pfn(r))
-					break;
-			}
-		}
-		if (*pfn >= memblock_region_memory_base_pfn(r) &&
-		    memblock_is_mirror(r)) {
-			*pfn = memblock_region_memory_end_pfn(r);
-			return true;
-		}
-	}
-	return false;
-}
-
 /*
  * Only struct pages that correspond to ranges defined by memblock.memory
  * are zeroed and initialized by going through __init_single_page() during
@@ -907,8 +885,6 @@ void __meminit memmap_init_range(unsigned long size, int nid, unsigned long zone
 		 * function.  They do not exist on hotplugged memory.
 		 */
 		if (context == MEMINIT_EARLY) {
-			if (overlap_memmap_init(zone, &pfn))
-				continue;
 			if (defer_init(nid, pfn, zone_end_pfn)) {
 				deferred_struct_pages = true;
 				break;
@@ -1174,9 +1150,8 @@ static void __init adjust_zone_range_for_zone_movable(int nid,
 				arch_zone_highest_possible_pfn[movable_zone]);
 
 		/* Adjust for ZONE_MOVABLE starting within this range */
-		} else if (!mirrored_kernelcore &&
-			*zone_start_pfn < zone_movable_pfn[nid] &&
-			*zone_end_pfn > zone_movable_pfn[nid]) {
+		} else if (*zone_start_pfn < zone_movable_pfn[nid] &&
+			   *zone_end_pfn > zone_movable_pfn[nid]) {
 			*zone_end_pfn = zone_movable_pfn[nid];
 
 		/* Check if this whole range is within ZONE_MOVABLE */
@@ -1224,40 +1199,11 @@ static unsigned long __init zone_absent_pages_in_node(int nid,
 					unsigned long zone_start_pfn,
 					unsigned long zone_end_pfn)
 {
-	unsigned long nr_absent;
-
 	/* zone is empty, we don't have any absent pages */
 	if (zone_start_pfn == zone_end_pfn)
 		return 0;
 
-	nr_absent = __absent_pages_in_range(nid, zone_start_pfn, zone_end_pfn);
-
-	/*
-	 * ZONE_MOVABLE handling.
-	 * Treat pages to be ZONE_MOVABLE in ZONE_NORMAL as absent pages
-	 * and vice versa.
-	 */
-	if (mirrored_kernelcore && zone_movable_pfn[nid]) {
-		unsigned long start_pfn, end_pfn;
-		struct memblock_region *r;
-
-		for_each_mem_region(r) {
-			start_pfn = clamp(memblock_region_memory_base_pfn(r),
-					  zone_start_pfn, zone_end_pfn);
-			end_pfn = clamp(memblock_region_memory_end_pfn(r),
-					zone_start_pfn, zone_end_pfn);
-
-			if (zone_type == ZONE_MOVABLE &&
-			    memblock_is_mirror(r))
-				nr_absent += end_pfn - start_pfn;
-
-			if (zone_type == ZONE_NORMAL &&
-			    !memblock_is_mirror(r))
-				nr_absent += end_pfn - start_pfn;
-		}
-	}
-
-	return nr_absent;
+	return __absent_pages_in_range(nid, zone_start_pfn, zone_end_pfn);
 }
 
 /*
@@ -1338,7 +1284,7 @@ static void __init calculate_node_totalpages(struct pglist_data *pgdat,
 						unsigned long node_start_pfn,
 						unsigned long node_end_pfn)
 {
-	unsigned long realtotalpages = 0, totalpages = 0;
+	unsigned long realtotalpages = 0;
 	enum zone_type i;
 
 	for (i = 0; i < MAX_NR_ZONES; i++) {
@@ -1368,11 +1314,10 @@ static void __init calculate_node_totalpages(struct pglist_data *pgdat,
 		zone->present_early_pages = real_size;
 #endif
 
-		totalpages += spanned;
 		realtotalpages += real_size;
 	}
 
-	pgdat->node_spanned_pages = totalpages;
+	pgdat->node_spanned_pages = node_end_pfn - node_start_pfn;
 	pgdat->node_present_pages = realtotalpages;
 	pr_debug("On node %d totalpages: %lu\n", pgdat->node_id, realtotalpages);
 }
