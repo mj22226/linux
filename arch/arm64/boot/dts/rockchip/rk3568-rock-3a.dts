@@ -269,6 +269,8 @@
 		     &gmac1m1_rgmii_clk
 		     &gmac1m1_clkinout
 		     &gmac1m1_rgmii_bus>;
+	tx_delay = <0x42>;
+	rx_delay = <0x28>;
 	status = "okay";
 };
 
